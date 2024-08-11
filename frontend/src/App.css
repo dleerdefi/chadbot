@@ -1,3 +1,4 @@
+/* src/App.css */
 .App {
   display: flex;
   flex-direction: column;
@@ -5,30 +6,79 @@
 }
 
 .chat-window {
+  display: flex;
+  height: 100vh;
+  background-color: #1e1e1e;
+}
+
+.sidebar {
+  width: 200px;
+  background-color: #2c2c2c;
+  color: white;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.main-chat {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  color: #33ff00;
+}
+
+.account-section {
+  width: 200px;
+  background-color: #2c2c2c;
+  color: white;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.message-area {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background-color: #f9f9f9;
+  border: 1px solid #33ff00;
+  padding: 10px;
+  margin-bottom: 10px;
+  height: calc(100vh - 200px); /* Adjust this value as needed */
+  display: flex;
+  flex-direction: column;
 }
 
 .message {
+  display: flex;
+  align-items: flex-start;
   margin-bottom: 10px;
   padding: 5px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #33ff00;
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.message-content {
+  flex: 1;
 }
 
 .message-input {
   display: flex;
   padding: 10px;
-  background-color: #fff;
-  border-top: 1px solid #ddd;
+  background-color: #1e1e1e;
+  border-top: 1px solid #33ff00;
 }
 
 .message-input input {
   flex: 1;
   padding: 10px;
   font-size: 16px;
-  border: 1px solid #ddd;
+  background-color: #000;
+  color: #33ff00;
+  border: 1px solid #33ff00;
   border-radius: 4px;
   margin-right: 10px;
 }
@@ -38,11 +88,64 @@
   font-size: 16px;
   border: none;
   border-radius: 4px;
-  background-color: #007bff;
-  color: #fff;
+  background-color: #33ff00;
+  color: #000;
   cursor: pointer;
 }
 
 .message-input button:hover {
-  background-color: #0056b3;
+  background-color: #2bdb00;
+}
+
+input[type="text"] {
+  background-color: #000;
+  color: #33ff00;
+  border: 1px solid #33ff00;
+}
+
+button {
+  background-color: #33ff00;
+  color: #000;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.logout-button {
+  background-color: #ff3300;
+  color: white;
+}
+
+.user-item, .bot-item {
+  padding: 5px 0;
+}
+
+.online {
+  color: #33ff00;
+}
+
+.offline {
+  color: #888;
+}
+
+h1, h2, h3 {
+  color: #33ff00;
+}
+
+/* Scrollbar styles for webkit browsers */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #33ff00;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2bdb00;
 }

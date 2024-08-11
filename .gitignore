@@ -1,7 +1,36 @@
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
-git remote add origin https://github.com/dleerdefi/chadbot.git
-node_modules/
-.env
-"backend/keys.env" 
-backend/keys.env 
+backend/.env
+backend/keys.env
+
+# Build files
+/build
+
+# Firebase
+firebase-debug.log
+.firebase/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploaded files
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Misc
+*.swp
+*.swo
