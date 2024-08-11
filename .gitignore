@@ -3,3 +3,5 @@ node_modules/
 git remote add origin https://github.com/dleerdefi/chadbot.git
 node_modules/
 .env
+"backend/keys.env" 
+backend/keys.env 
