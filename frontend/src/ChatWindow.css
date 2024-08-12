@@ -45,3 +45,9 @@
   .clickable {
     cursor: pointer;
   }
+
+    .timestamp {
+    font-size: 0.8em;
+    color: #888;
+    margin-left: 10px;
+  }

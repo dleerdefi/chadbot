@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
+import { signOut, getAuth } from 'firebase/auth';
 import { auth } from '../firebase';
 
 const API_URL = 'http://localhost:3000'; // Adjust this if your backend is on a different port
@@ -16,12 +16,16 @@ const AccountSection = ({ user, setUser }) => {
 
   const updateProfile = async () => {
     try {
+      const firebaseUser = getAuth().currentUser;
+      const idToken = await firebaseUser.getIdToken(true);  // Force refresh the token
       const response = await axios.post(`${API_URL}/api/update-profile`, 
         { username, bio }, 
         {
-          headers: { 'Authorization': `Bearer ${user.token}` }
+          headers: { 'Authorization': `Bearer ${idToken}` }
         }
       );
+      console.log('Profile update response:', response.data); // Add this line for debugging
+      console.log('Update response:', response.data);  // New console log
       setUser(response.data.user);
       setSuccess('Profile updated successfully');
       setError('');
@@ -38,14 +42,18 @@ const AccountSection = ({ user, setUser }) => {
     formData.append('profilePic', file);
 
     try {
+      const firebaseUser = getAuth().currentUser;
+      const idToken = await firebaseUser.getIdToken(true);
       const response = await axios.post(`${API_URL}/api/upload-profile-pic`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${user.token}`
+          'Authorization': `Bearer ${idToken}`
         }
       });
-      setProfilePic(response.data.profilePicUrl);
-      setUser({...user, profilePic: response.data.profilePicUrl});
+      console.log('Upload response:', response.data);  // New console log
+      const fullProfilePicUrl = `${API_URL}${response.data.profilePicUrl}`;
+      setProfilePic(fullProfilePicUrl);
+      setUser({...user, profilePic: fullProfilePicUrl});
       setSuccess('Profile picture uploaded successfully');
       setError('');
     } catch (error) {
@@ -66,11 +74,13 @@ const AccountSection = ({ user, setUser }) => {
     }
   };
 
+  const fullProfilePicUrl = profilePic ? `${API_URL}${profilePic}` : '/default-avatar.png';
+
   return (
     <div className="account-section">
       <h3>Account</h3>
       <img 
-        src={profilePic || '/default-avatar.png'} 
+        src={fullProfilePicUrl} 
         alt="Profile" 
         className="profile-pic"
         style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '50%' }}

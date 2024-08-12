@@ -3,13 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA-V9d-gWnhYr11Qkl-Zf9TC2MzDI-D0ng",
-  authDomain: "chadbot-login.firebaseapp.com",
-  projectId: "chadbot-login",
-  storageBucket: "chadbot-login.appspot.com",
-  messagingSenderId: "941972847503",
-  appId: "1:941972847503:web:bdce6b0b311726357829fa",
-  measurementId: "G-Q9TTTHP375"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

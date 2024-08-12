@@ -10,6 +10,8 @@ const User = require('./models/User');
 const Message = require('./models/Message');
 const bots = require('./bots');
 const upload = require('./uploadConfig');
+const isAdmin = require('./middleware/isAdmin');
+const config = require('./config');
 require('dotenv').config({ path: './keys.env' });
 
 const app = express();
@@ -44,7 +46,6 @@ const serviceAccount = require('./serviceAccountKey.json');
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
-  databaseURL: 'https://chadbot-login.firebaseio.com'
 });
 
 const transporter = nodemailer.createTransport({
@@ -161,6 +162,16 @@ app.get('/api/users', authenticateFirebaseToken, async (req, res) => {
     }
 });
 
+// Add a new endpoint for all users (including _id)
+app.get('/api/all-users', authenticateFirebaseToken, async (req, res) => {
+    try {
+        const users = await User.find({}, '_id username profilePic bio');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch users', details: error.message });
+    }
+});
+
 app.get('/api/bots', (req, res) => {
     res.json(bots.map(bot => ({
         name: bot.username,
@@ -219,12 +230,14 @@ app.get('/api/current_user', authenticateFirebaseToken, async (req, res) => {
 app.post('/api/update-profile', authenticateFirebaseToken, async (req, res) => {
   const { username, bio } = req.body;
   try {
+    console.log('Received update request:', req.body);
     const user = await User.findOneAndUpdate(
       { firebaseUid: req.user.uid },
       { username, bio },
       { new: true }
     );
     if (user) {
+      console.log('Updated user:', user);
       res.json({ message: 'Profile updated successfully', user });
     } else {
       res.status(404).json({ error: 'User not found' });
@@ -258,7 +271,7 @@ app.post('/api/upload-profile-pic', authenticateFirebaseToken, upload.single('pr
 
 const getBotResponse = async (botName, prompt) => {
     try {
-        const bot = bots.find(b => b.username === botName);
+        const bot = bots.find(b => b.username.toLowerCase() === botName.toLowerCase());
         if (!bot) {
             throw new Error('Bot not found');
         }
@@ -286,26 +299,47 @@ const getBotResponse = async (botName, prompt) => {
     }
 };
 
+// In the POST route for messages
 app.post('/api/messages', authenticateFirebaseToken, async (req, res) => {
     const { text } = req.body;
+    console.log('Received message:', text);
     try {
         const user = await User.findOne({ firebaseUid: req.user.uid });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const message = new Message({ user: user._id, text });
+        const message = new Message({
+            user: user._id,
+            text: text
+        });
+        
         await message.save();
 
-        const botName = bots.find(bot => text.includes(`@${bot.username}`))?.username;
+        const botName = bots.find(bot => text.toLowerCase().includes(`@${bot.username.toLowerCase()}`))?.username;
+        console.log('Detected bot:', botName);
 
         if (botName) {
             console.log(`Message directed at bot: ${botName}`);
-            const botPrompt = text.replace(`@${botName}`, '').trim();
+            const botPrompt = text.replace(new RegExp(`@${botName}`, 'i'), '').trim();
+            console.log('Bot prompt:', botPrompt);
             const botResponse = await getBotResponse(botName, botPrompt);
-            const botUser = await User.findOne({ username: botName }) || { _id: 'bot', username: botName };
+            console.log('Bot response:', botResponse);
+
+            // Find or create bot user
+            let botUser = await User.findOne({ username: botName });
+            if (!botUser) {
+                botUser = new User({
+                    username: botName,
+                    email: `${botName.toLowerCase()}@example.com`,
+                    isBot: true
+                });
+                await botUser.save();
+            }
+
             const botMessage = new Message({ user: botUser._id, text: botResponse });
             await botMessage.save();
+            
             res.json([
                 {
                     id: message._id,
@@ -316,7 +350,7 @@ app.post('/api/messages', authenticateFirebaseToken, async (req, res) => {
                 {
                     id: botMessage._id,
                     text: botMessage.text,
-                    user: { name: botName, profilePic: '/default-bot-avatar.png' },
+                    user: { name: botUser.username, profilePic: '/default-bot-avatar.png' },
                     createdAt: botMessage.createdAt
                 }
             ]);
@@ -334,8 +368,78 @@ app.post('/api/messages', authenticateFirebaseToken, async (req, res) => {
     }
 });
 
+// In the GET route for messages
+app.get('/api/messages', authenticateFirebaseToken, async (req, res) => {
+    console.log('Received request for messages');
+    try {
+        console.log('Fetching messages from database...');
+        const messages = await Message.find()
+            .sort({ createdAt: 1 }) // Sort by creation time, oldest first
+            .limit(100) // Limit to last 100 messages
+            .populate('user', 'username profilePic');
+        console.log(`Found ${messages.length} messages`);
+        res.json(messages.map(message => ({
+            id: message._id,
+            text: message.text,
+            user: {
+                name: message.user ? message.user.username : 'Unknown User',
+                profilePic: message.user ? message.user.profilePic : '/default-avatar.png'
+            },
+            createdAt: message.createdAt // Send the creation time back to the client
+        })));
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ error: 'Failed to fetch messages', details: error.message });
+    }
+});
+
+// Make user an admin
+app.post('/api/make-admin', authenticateFirebaseToken, isAdmin, async (req, res) => {
+    const { userId } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(userId, { isAdmin: true }, { new: true });
+      res.json({ message: 'User is now an admin', user });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update user', details: error.message });
+    }
+  });
+  
+  // Ban a user
+  app.post('/api/ban-user', authenticateFirebaseToken, isAdmin, async (req, res) => {
+    const { userId } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(userId, { isBanned: true }, { new: true });
+      res.json({ message: 'User has been banned', user });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to ban user', details: error.message });
+    }
+  });
+  
+  // Get all users (admin only)
+  app.get('/api/all-users', authenticateFirebaseToken, isAdmin, async (req, res) => {
+    try {
+      const users = await User.find({}, '-password');
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch users', details: error.message });
+    }
+  });
+  
+  // Delete messages (admin only)
+  app.post('/api/delete-messages', authenticateFirebaseToken, isAdmin, async (req, res) => {
+    const { messageIds } = req.body;
+    
+    try {
+      await Message.deleteMany({ _id: { $in: messageIds } });
+      res.json({ message: 'Messages deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting messages:', error);
+      res.status(500).json({ error: 'Error deleting messages', details: error.message });
+    }
+  });
+
 app.use(express.static(path.join(__dirname, '../frontend/build')));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build/index.html'));

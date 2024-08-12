@@ -27,9 +27,10 @@ const Register = ({ setUser }) => {
       const firebaseUser = userCredential.user;
 
       // Create user in your backend
-      const backendResponse = await axios.post('/register', { 
+      const backendResponse = await axios.post('/api/register', { 
         email, 
         username, 
+        password, // Note: In a real-world scenario, avoid sending plain text passwords
         firebaseUid: firebaseUser.uid 
       });
 
