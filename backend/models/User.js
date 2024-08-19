@@ -17,35 +17,19 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true,
     minlength: 3,
-    maxlength: 30
+    maxlength: 30,
+    index: true  // Add this line
   },
-  password: { type: String },
-  firebaseUid: { type: String },
+  firebaseUid: { type: String, required: true, unique: true },
   googleId: { type: String },
   isAdmin: { type: Boolean, default: false },
   isBot: { type: Boolean, default: false },
   profilePic: { type: String },
-  bio: { type: String },
+  bio: { type: String, default: 'No bio available', trim: true, maxlength: 150 },  
   isBanned: { type: Boolean, default: false },
   active: { type: Boolean, default: true },
   roles: [{ type: String }]
 }, { timestamps: true });
-
-// Password hashing middleware
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
-
-userSchema.methods.comparePassword = function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
-};
 
 // Virtual for user's full name
 userSchema.virtual('fullName').get(function () {
@@ -62,4 +46,26 @@ userSchema.statics.findActive = function() {
   return this.find({ active: true });
 };
 
-module.exports = mongoose.model('User', userSchema);
+// Middleware to log user creation
+userSchema.post('save', function(doc, next) {
+  console.log('New user created:', doc.email);
+  next();
+});
+
+// Middleware to log user updates
+userSchema.post('findOneAndUpdate', function(doc) {
+  if (doc) {
+    console.log('User updated:', doc.email);
+  }
+});
+
+const User = mongoose.model('User', userSchema);
+
+// Add error handling for duplicate key errors
+User.on('index', function(err) {
+  if (err) {
+    console.error('User index error: ', err);
+  }
+});
+
+module.exports = User;

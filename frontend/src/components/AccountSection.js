@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { signOut, getAuth } from 'firebase/auth';
 import { auth } from '../firebase';
+import '../AccountSection.css';
 
 const API_URL = 'http://localhost:3000'; // Adjust this if your backend is on a different port
 
@@ -16,16 +17,8 @@ const AccountSection = ({ user, setUser }) => {
 
   const updateProfile = async () => {
     try {
-      const firebaseUser = getAuth().currentUser;
-      const idToken = await firebaseUser.getIdToken(true);  // Force refresh the token
-      const response = await axios.post(`${API_URL}/api/update-profile`, 
-        { username, bio }, 
-        {
-          headers: { 'Authorization': `Bearer ${idToken}` }
-        }
-      );
-      console.log('Profile update response:', response.data); // Add this line for debugging
-      console.log('Update response:', response.data);  // New console log
+      const response = await axios.post('/api/update-profile', { username, bio });
+      console.log('Profile update response:', response.data);
       setUser(response.data.user);
       setSuccess('Profile updated successfully');
       setError('');
@@ -50,7 +43,7 @@ const AccountSection = ({ user, setUser }) => {
           'Authorization': `Bearer ${idToken}`
         }
       });
-      console.log('Upload response:', response.data);  // New console log
+      console.log('Upload response:', response.data);
       const fullProfilePicUrl = `${API_URL}${response.data.profilePicUrl}`;
       setProfilePic(fullProfilePicUrl);
       setUser({...user, profilePic: fullProfilePicUrl});
@@ -71,6 +64,23 @@ const AccountSection = ({ user, setUser }) => {
     } catch (error) {
       console.error('Error signing out:', error);
       setError('Failed to log out');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      try {
+        const firebaseUser = getAuth().currentUser;
+        const idToken = await firebaseUser.getIdToken(true);
+        await axios.delete(`${API_URL}/api/delete-account`, {
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
+        // Log out the user and redirect to home page
+        await handleLogout();
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        setError('Failed to delete account. Please try again.');
+      }
     }
   };
 
@@ -110,6 +120,7 @@ const AccountSection = ({ user, setUser }) => {
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {success && <p style={{ color: 'green' }}>{success}</p>}
       <button onClick={handleLogout} className="logout-button">Log Out</button>
+      <button onClick={handleDeleteAccount} className="delete-account-btn">Delete Account</button>
     </div>
   );
 };

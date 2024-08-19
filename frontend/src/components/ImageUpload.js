@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../axiosConfig';
+import { useAuth } from '../contexts/AuthContext'; // Import this if you have an AuthContext
 
 const ImageUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -8,6 +9,7 @@ const ImageUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const { logout } = useAuth(); // Use this if you have an AuthContext for handling logout
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -33,10 +35,10 @@ const ImageUpload = () => {
     setIsLoading(true);
     setError(null);
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    formData.append('profilePic', selectedFile);
 
     try {
-      const response = await axios.post('http://localhost:3000/upload', formData, {
+      const response = await axios.post('/api/upload-profile-pic', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
@@ -46,9 +48,23 @@ const ImageUpload = () => {
         }
       });
       console.log('File uploaded:', response.data);
+      // Here you might want to update the user's profile picture in your app's state
+      // For example: updateUserProfilePic(response.data.profilePicUrl);
     } catch (error) {
       console.error('Error uploading file:', error);
-      setError('Failed to upload image. Please try again.');
+      if (error.response) {
+        if (error.response.status === 401) {
+          setError('Authentication failed. Please log in again.');
+          // You might want to redirect to login page or show a login prompt
+          // logout(); // Uncomment this if you want to log out the user automatically
+        } else {
+          setError(error.response.data.error || 'Failed to upload image. Please try again.');
+        }
+      } else if (error.request) {
+        setError('No response received from the server. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

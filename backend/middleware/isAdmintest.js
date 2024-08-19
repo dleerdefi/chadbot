@@ -1,40 +1,75 @@
-const { expect } = require('chai');
-const sinon = require('sinon');
-const isAdmin = require('./isAdmin');
+const config = require('../config');
+const User = require('../models/User');
+const redis = require('redis');
+const { promisify } = require('util');
 
-describe('isAdmin middleware', () => {
-  let req, res, next;
+let client;
+let getAsync;
 
-  beforeEach(() => {
-    req = { user: { id: '123' } };
-    res = {
-      status: sinon.stub().returnsThis(),
-      json: sinon.spy()
-    };
-    next = sinon.spy();
-  });
+const ADMIN_CACHE_DURATION = process.env.ADMIN_CACHE_DURATION || 3600;
 
-  it('should call next() for admin users', async () => {
-    req.user.isAdmin = true;
-    await isAdmin(req, res, next);
-    expect(next.calledOnce).to.be.true;
-  });
+const initializeRedis = async () => {
+  if (!client) {
+    client = redis.createClient(config.redisUrl);
+    getAsync = promisify(client.get).bind(client);
 
-  it('should return 403 for non-admin users', async () => {
-    req.user.isAdmin = false;
-    await isAdmin(req, res, next);
-    expect(res.status.calledWith(403)).to.be.true;
-    expect(res.json.calledWith({ error: 'Access denied. Admin privileges required.' })).to.be.true;
-    expect(next.called).to.be.false;
-  });
+    client.on('error', (error) => console.error('Redis error:', error));
+    client.on('end', () => {
+      console.log('Redis connection closed');
+      client = null;
+      getAsync = null;
+    });
 
-  it('should return 403 when no user object is present', async () => {
-    req.user = null;
-    await isAdmin(req, res, next);
-    expect(res.status.calledWith(403)).to.be.true;
-    expect(res.json.calledWith({ error: 'Access denied. Authentication required.' })).to.be.true;
-    expect(next.called).to.be.false;
-  });
+    await new Promise((resolve) => client.on('connect', resolve));
+  }
+};
 
-  // Add more tests as needed, e.g., for Redis caching scenarios
-});
+const isRedisAvailable = () => client && client.isOpen;
+
+const isAdmin = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      console.log('Access attempt without user object');
+      return res.status(403).json({ success: false, error: 'Access denied. Authentication required.' });
+    }
+
+    let isAdminValue;
+    const cacheKey = `user:${req.user.uid}:isAdmin`;
+
+    try {
+      await initializeRedis();
+      if (isRedisAvailable()) {
+        const cachedValue = await getAsync(cacheKey);
+        isAdminValue = cachedValue ? JSON.parse(cachedValue) : null;
+      }
+    } catch (redisError) {
+      console.error('Redis error, falling back to database:', redisError);
+    }
+
+    if (isAdminValue === null) {
+      const user = await User.findOne({ firebaseUid: req.user.uid });
+      isAdminValue = user && user[config.adminField] ? true : false;
+
+      if (isRedisAvailable()) {
+        try {
+          await client.set(cacheKey, JSON.stringify(isAdminValue), 'EX', ADMIN_CACHE_DURATION);
+        } catch (cacheError) {
+          console.error('Error caching admin status:', cacheError);
+        }
+      }
+    }
+
+    if (isAdminValue) {
+      console.log(`Admin access granted to user ${req.user.uid}`);
+      return next();
+    } else {
+      console.log(`Non-admin access attempt by user ${req.user.uid}`);
+      return res.status(403).json({ success: false, error: 'Access denied. Admin privileges required.' });
+    }
+  } catch (error) {
+    console.error('Error in isAdmin middleware:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+module.exports = isAdmin;

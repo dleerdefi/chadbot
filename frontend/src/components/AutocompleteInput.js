@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
+import PropTypes from 'prop-types';
 import '../AutocompleteInput.css';
 
-const AutocompleteInput = ({ value, onChange, onSubmit, users }) => {
+const AutocompleteInput = memo(({ value, onChange, onSubmit, users }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const inputRef = useRef(null);
@@ -31,10 +32,16 @@ const AutocompleteInput = ({ value, onChange, onSubmit, users }) => {
       words[words.length - 1] = `@${suggestions[activeSuggestion].username}`;
       onChange(words.join(' '));
       setSuggestions([]);
+    } else if (e.key === 'Enter' && suggestions.length === 0) {
+      onSubmit(e);
     }
   };
 
   const handleSuggestionClick = (suggestion) => {
+    if (!suggestion.username) {
+      console.error('Suggestion does not have a username:', suggestion);
+      return;
+    }
     const words = value.split(' ');
     words[words.length - 1] = `@${suggestion.username}`;
     onChange(words.join(' '));
@@ -51,12 +58,18 @@ const AutocompleteInput = ({ value, onChange, onSubmit, users }) => {
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Type a message..."
+        aria-autocomplete="list"
+        aria-controls="suggestions-list"
+        aria-activedescendant={suggestions.length > 0 ? `suggestion-${activeSuggestion}` : undefined}
       />
       {suggestions.length > 0 && (
-        <ul className="suggestions-list">
+        <ul id="suggestions-list" className="suggestions-list" role="listbox">
           {suggestions.map((suggestion, index) => (
             <li
               key={suggestion._id}
+              id={`suggestion-${index}`}
+              role="option"
+              aria-selected={index === activeSuggestion}
               className={index === activeSuggestion ? 'active' : ''}
               onClick={() => handleSuggestionClick(suggestion)}
             >
@@ -67,6 +80,16 @@ const AutocompleteInput = ({ value, onChange, onSubmit, users }) => {
       )}
     </div>
   );
+});
+
+AutocompleteInput.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  users: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired
+  })).isRequired
 };
 
 export default AutocompleteInput;

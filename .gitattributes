@@ -1,13 +1,16 @@
 # Set default behavior, in case users don't have core.autocrlf set.
 * text=auto
 
-# Explicitly declare text files you want to always be normalized and converted
-# to native line endings on checkout.
-*.css text
-*.js text
-*.json text
-*.txt text
-*.html text
+# Ensure files are checked out with LF on all platforms and normalized to LF on commit.
+* text eol=lf
+
+# Explicitly declare text files to normalize and always convert to LF line endings on commit.
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.sh text eol=lf
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary

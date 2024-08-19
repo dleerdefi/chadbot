@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
-const MessageInput = ({ onSendMessage }) => {
+const MessageInput = () => {
     const [message, setMessage] = useState('');
+    const { socket } = useWebSocket();
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         if (!message.trim()) return;
-
-        try {
-            const response = await axios.post('http://localhost:3000/api/messages', { message });
-            onSendMessage(response.data); // Ensure this sends the response data back to the parent component
-            setMessage('');
-        } catch (error) {
-            console.error('Error sending message:', error);
+    
+        if (socket) {
+            try {
+                socket.emit('chatMessage', { text: message });
+                setMessage('');
+            } catch (error) {
+                console.error('Error sending message:', error);
+                // Optionally, show an error to the user
+            }
+        } else {
+            console.error('Socket not connected');
+            // Optionally, show an error to the user
         }
     };
 

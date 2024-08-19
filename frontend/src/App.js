@@ -1,66 +1,130 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ChatWindow from './components/ChatWindow';
 import Login from './components/Login';
 import Register from './components/Register';
-import Account from './components/Account';
+import Account from './components/AccountSection';
 import ResetPassword from './components/ResetPassword';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
+import { AuthProvider } from './contexts/AuthContext';
+import { WebSocketProvider } from './contexts/WebSocketContext';
+import { debounce } from 'lodash';
 import './App.css';
 
-const API_URL = 'http://localhost:3000'; // Adjust this if your backend is on a different port
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+const Loading = () => (
+  <div className="loading">
+    <div className="spinner"></div>
+    <p>Loading...</p>
+  </div>
+);
+
+const fetchWithRetry = async (url, options, maxRetries = 3) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await axios(url, options);
+    } catch (error) {
+      if (error.response && error.response.status === 429) {
+        const delay = Math.pow(2, i) * 1000; // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error('Max retries reached');
+};
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const refreshToken = useCallback(async () => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      try {
+        const newToken = await currentUser.getIdToken(true);
+        setUser(prevUser => ({ ...prevUser, token: newToken }));
+        return newToken;
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+        setError('Failed to refresh authentication. Please log in again.');
+        return null;
+      }
+    }
+    return null;
+  }, []);
+
+  const fetchUserData = useCallback(async (token) => {
+    try {
+      const response = await fetchWithRetry(`${API_URL}/api/current_user`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setUser({ ...response.data, token });
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      setUser(null);
+      setError('Failed to load user data. Please try logging in again.');
+    }
+  }, []);
+
+  const debouncedFetchUserData = useCallback((token) => {
+    const debouncedFetch = debounce((token) => {
+      fetchUserData(token);
+    }, 5000);
+    debouncedFetch(token);
+    return debouncedFetch.cancel;
+  }, [fetchUserData]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
-        try {
-          // Get the Firebase ID token
-          const idToken = await firebaseUser.getIdToken();
-          
-          // Fetch user data from your backend
-          const response = await axios.get(`${API_URL}/api/current_user`, {
-            headers: {
-              'Authorization': `Bearer ${idToken}`
-            }
-          });
-          setUser({ ...response.data, token: idToken });
-        } catch (error) {
-          console.error('Error fetching current user:', error);
-          setUser(null);
+        const token = await refreshToken();
+        if (token) {
+          debouncedFetchUserData(token);
         }
       } else {
         setUser(null);
+        setError(null);
       }
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribe();
+    };
+  }, [refreshToken, debouncedFetchUserData]);
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <Loading />;
   }
-
+  
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/login" element={user ? <Navigate to="/app" /> : <Login setUser={setUser} />} />
-          <Route path="/register" element={user ? <Navigate to="/app" /> : <Register setUser={setUser} />} />
-          <Route path="/app" element={user ? <ChatWindow user={user} setUser={setUser} /> : <Navigate to="/login" />} />
-          <Route path="/account" element={user ? <Account user={user} setUser={setUser} /> : <Navigate to="/login" />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/" element={<Navigate to={user ? "/app" : "/login"} />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider value={{ user, setUser, refreshToken, error, setError }}>
+      <WebSocketProvider>
+        <Router>
+          <div className="App">
+            {error && <div className="error-message">{error}</div>}
+            <Routes>
+              <Route path="/login" element={user ? <Navigate to="/app" /> : <Login />} />
+              <Route path="/register" element={user ? <Navigate to="/app" /> : <Register />} />
+              <Route path="/app" element={user ? <ChatWindow /> : <Navigate to="/login" />} />
+              <Route path="/account" element={user ? <Account /> : <Navigate to="/login" />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/" element={<Navigate to={user ? "/app" : "/login"} />} />
+            </Routes>
+          </div>
+        </Router>
+      </WebSocketProvider>
+    </AuthProvider>
   );
 };
 
