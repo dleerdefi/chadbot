@@ -14,9 +14,13 @@ const socketIo = require('socket.io');
 const authenticateSocket = require('./middleware/authenticateSocket');
 const { spawn } = require('child_process');
 const redis = require('redis');
-const nodemailer = require('nodemailer');
-const { upload, handleMulterError } = require('./uploadConfig');
-require('dotenv').config({ path: './.env' });
+const nodemailer = require('nodemailer');cors
+
+// Environment variables
+const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGO_URI;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5000';
+const REDIS_URL = process.env.REDIS_URL;
 
 const onlineUsers = new Set();
 const botUsers = new Set();
@@ -25,9 +29,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5000",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Authorization"],
+    origin: FRONTEND_URL,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
   }
 });
@@ -43,14 +47,14 @@ const botNames = bots.map(bot => bot.username);
 // const botNames = ['RossJeffries', 'JohnSinn', 'NeilStrauss', 'Mystery', /* any other bot names */];
 
 // Redis client setup
-const redisClient = redis.createClient({ url: process.env.REDIS_URL });
+const redisClient = redis.createClient({ url: REDIS_URL });
 redisClient.on('error', (err) => console.error('Redis error:', err));
 redisClient.connect().catch(console.error);
 
 const maxRequestsPerDay = 10; // Define the limit here
 
 app.use(cors({
-  origin: 'http://localhost:5000',
+  origin: FRONTEND_URL || 'http://localhost:5000',
   credentials: true
 }));
 app.use(express.json());
@@ -84,12 +88,16 @@ function addToGlobalCache(message) {
   }
 }
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
+async function connectToMongoDB() {
+  try {
+    await mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log('MongoDB connected successfully');
-    initializeBotUsers(); // Call the function here
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+    await initializeBotUsers();
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  }
+}
 
 async function initializeBotUsers() {
   try {
@@ -164,13 +172,13 @@ const authenticateFirebaseToken = async (req, res, next) => {
 
     console.log('Token verified successfully');
     req.user = decodedToken;
-    
+
     // Fetch user from MongoDB
     const user = await User.findOne({ firebaseUid: decodedToken.uid });
     if (user) {
       req.user = { ...req.user, ...user.toObject() };
     }
-    
+
     next();
   } catch (error) {
     console.error('Token verification failed:', error);
@@ -250,7 +258,7 @@ io.on('connection', (socket) => {
       const isWithinLimit = await checkMessageRateLimit(socket.userId);
       if (!isWithinLimit) {
         const remaining = await getRemainingLimit(socket.userId);
-        socket.emit('error', { 
+        socket.emit('error', {
           message: 'Rate limit exceeded. Please wait before sending more messages.',
           remainingMessages: remaining
         });
@@ -277,7 +285,7 @@ io.on('connection', (socket) => {
         createdAt: message.createdAt,
         room: message.room
       };
-  
+
       io.emit('message', formattedMessage);
 
       // Bot handling code
@@ -290,23 +298,23 @@ io.on('connection', (socket) => {
           io.emit('botTyping', { botName: botName, isTyping: true });
 
           const botPrompt = data.text.replace(new RegExp(`@${botMention[1]}`, 'i'), '').trim();
-          
+
           const pythonProcess = spawn('python', [
             path.join(__dirname, 'rag_service.py'),
             botPrompt,
             botName
           ]);
-        
+
           let responseData = '';
-        
+
           pythonProcess.stdout.on('data', (data) => {
             responseData += data.toString();
           });
-        
+
           pythonProcess.stderr.on('data', (data) => {
             console.error(`Python Error: ${data}`);
           });
-        
+
           pythonProcess.on('close', async (code) => {
             io.emit('botTyping', { botName: botName, isTyping: false });
 
@@ -317,7 +325,7 @@ io.on('connection', (socket) => {
             }
             try {
               const { response } = JSON.parse(responseData);
-              
+
               let botUser = await User.findOne({ username: botName });
               if (!botUser) {
                 botUser = new User({
@@ -328,10 +336,10 @@ io.on('connection', (socket) => {
                 });
                 await botUser.save();
               }
-        
+
               const botMessage = new Message({ user: botUser._id, text: response, room: data.room });
               await botMessage.save();
-        
+
               const formattedBotMessage = {
                 id: botMessage._id.toString(),
                 text: botMessage.text,
@@ -344,7 +352,7 @@ io.on('connection', (socket) => {
                 createdAt: botMessage.createdAt,
                 room: botMessage.room
               };
-        
+
               io.emit('message', formattedBotMessage);
             } catch (error) {
               console.error('Error parsing RAG service response:', error);
@@ -392,14 +400,14 @@ app.post('/register', async (req, res) => {
     });
     console.log('User created in Firebase:', userRecord.uid);
 
-    user = new User({ 
-      email, 
-      username, 
-      firebaseUid: userRecord.uid 
+    user = new User({
+      email,
+      username,
+      firebaseUid: userRecord.uid
     });
     const savedUser = await user.save();
     console.log('User saved to MongoDB:', savedUser);
-    
+
     const verificationLink = await admin.auth().generateEmailVerificationLink(email);
     sendVerificationEmail(email, verificationLink);
 
@@ -493,23 +501,23 @@ app.delete('/api/messages/:id', authenticateFirebaseToken, isAdmin, async (req, 
 app.delete('/api/delete-account', authenticateFirebaseToken, async (req, res) => {
   try {
     const firebaseUid = req.user.uid;
-    
+
     // Find the user in MongoDB using the Firebase UID
     const user = await User.findOne({ firebaseUid: firebaseUid });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     // Delete user's messages using the MongoDB _id
     await Message.deleteMany({ user: user._id });
-    
+
     // Delete user from MongoDB
     await User.findByIdAndDelete(user._id);
-    
+
     // Delete user from Firebase
     await admin.auth().deleteUser(firebaseUid);
-    
+
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
     console.error('Error deleting account:', error);
@@ -625,7 +633,7 @@ app.get('/api/current_user', authenticateFirebaseToken, async (req, res) => {
 // New RAG-based chat endpoint
 app.post('/api/chat', authenticateFirebaseToken, async (req, res) => {
   const { message, botName } = req.body;
-  
+
   try {
     const pythonProcess = spawn('python', [
       path.join(__dirname, 'rag_service.py'),
@@ -733,7 +741,7 @@ app.post('/api/messages', authenticateFirebaseToken, async (req, res) => {
       user: req.user._id,  // Changed from user._id to req.user._id
       text: text
     });
-    
+
     await message.save();
 
     const botName = bots.find(bot => text.toLowerCase().includes(`@${bot.username.toLowerCase()}`))?.username;
@@ -747,7 +755,7 @@ app.post('/api/messages', authenticateFirebaseToken, async (req, res) => {
       const botResponse = await getBotResponse(botName, botPrompt);
       console.log('Bot response:', botResponse);
 
-      let botUser = await User.findOne({ 
+      let botUser = await User.findOne({
         $or: [
           { username: botName },
           { username: botName.toLowerCase() },
@@ -918,18 +926,18 @@ const setupRAG = async (botNames) => {
   });
 };
 
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5000';
-const REDIS_URL = process.env.REDIS_URL;
-
 const startServer = async () => {
   try {
     console.log('Starting RAG setup...');
     await setupRAG(botNames);
     console.log('RAG setup completed successfully');
+
+    await connectToMongoDB();
+    await redisClient.connect();
+
     server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
+      console.log(`Frontend URL: ${FRONTEND_URL}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

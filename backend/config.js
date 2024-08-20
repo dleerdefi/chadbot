@@ -21,7 +21,7 @@ module.exports = {
   adminField: 'isAdmin', // The field in the User model that determines admin status
 
   // API configurations
-  apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:3000',
+  apiBaseUrl: process.env.BACKEND_URL || 'http://localhost:3000',
 
   // Email configurations
   emailService: process.env.EMAIL_SERVICE || 'gmail',
@@ -41,7 +41,7 @@ module.exports = {
   logLevel: process.env.LOG_LEVEL || 'info',
 
   // CORS configurations
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5000',
+  corsOrigin: process.env.FRONTEND_URL || 'http://localhost:5000',
 
   // Session configurations
   sessionSecret: process.env.SESSION_SECRET || 'your-session-secret',

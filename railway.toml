@@ -1,11 +1,11 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npm install && npm run build"
+builder = 'nixpacks'
+buildCommand = 'cd backend && npm install && cd ../frontend && npm install && npm run build && cd ..'
 
 [deploy]
-startCommand = "npm start"
-healthcheckPath = "/"
+startCommand = 'cd backend && npm start'
+healthcheckPath = '/'
 healthcheckTimeout = 100
 
 [nixpacks]
-nodejs-version = "20.13.1"
+nodejs-version = '16.x'
