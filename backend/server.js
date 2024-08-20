@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const firebaseAdmin = require('firebase-admin');
+const admin = require('firebase-admin');
 const { checkMessageRateLimit, getRemainingLimit } = require('./rateLimiter');
 const User = require('./models/User');
 const Message = require('./models/Message');
@@ -104,10 +104,14 @@ async function initializeBotUsers() {
   }
 }
 
-const serviceAccount = require('./serviceAccountKey.json');
-firebaseAdmin.initializeApp({
-  credential: firebaseAdmin.credential.cert(serviceAccount),
-});
+if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+} else {
+  console.warn('Firebase Admin SDK is not configured. Some features may not work.');
+}
 
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
@@ -153,7 +157,7 @@ const authenticateFirebaseToken = async (req, res, next) => {
       decodedToken = tokenCache.get(token);
     } else {
       console.log('Verifying token...');
-      decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+      decodedToken = await admin.auth().verifyIdToken(token);
       tokenCache.set(token, decodedToken);
       setTimeout(() => tokenCache.delete(token), 3600000); // Cache for 1 hour
     }
@@ -381,7 +385,7 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    const userRecord = await firebaseAdmin.auth().createUser({
+    const userRecord = await admin.auth().createUser({
       email,
       password,
       emailVerified: false,
@@ -395,8 +399,8 @@ app.post('/register', async (req, res) => {
     });
     const savedUser = await user.save();
     console.log('User saved to MongoDB:', savedUser);
-
-    const verificationLink = await firebaseAdmin.auth().generateEmailVerificationLink(email);
+    
+    const verificationLink = await admin.auth().generateEmailVerificationLink(email);
     sendVerificationEmail(email, verificationLink);
 
     res.status(201).json({ message: 'User registered. Please check your email to verify your account.' });
@@ -414,7 +418,7 @@ app.post('/login', async (req, res) => {
     console.log('User found in MongoDB:', user);
     if (!user) {
       console.log('User not found in MongoDB, checking Firebase');
-      const firebaseUser = await firebaseAdmin.auth().getUserByEmail(email);
+      const firebaseUser = await admin.auth().getUserByEmail(email);
       if (firebaseUser) {
         console.log('User found in Firebase, creating in MongoDB');
         user = new User({
@@ -504,7 +508,7 @@ app.delete('/api/delete-account', authenticateFirebaseToken, async (req, res) =>
     await User.findByIdAndDelete(user._id);
     
     // Delete user from Firebase
-    await firebaseAdmin.auth().deleteUser(firebaseUid);
+    await admin.auth().deleteUser(firebaseUid);
     
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
@@ -915,6 +919,9 @@ const setupRAG = async (botNames) => {
 };
 
 const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5000';
+const REDIS_URL = process.env.REDIS_URL;
 
 const startServer = async () => {
   try {
