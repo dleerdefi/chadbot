@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install && cd frontend && npm install && npm run build && cd .."
+buildCommand = "npm install && npm run build"
 
 [deploy]
 startCommand = "npm start"
@@ -8,4 +8,4 @@ healthcheckPath = "/"
 healthcheckTimeout = 100
 
 [nixpacks]
-nodejs-version = "16"  # or whichever version you're using
+nodejs-version = "16"
