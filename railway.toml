@@ -1,14 +1,9 @@
 [build]
-# Make sure these commands are explicitly Node.js-related and not Docker-related.
-buildCommand = "npm install && npm run build"
+# Use the default builder, Railway will handle this via Docker
+builder = "docker"
 
 [deploy]
-# Ensure the start command is simple and straightforward, suitable for your Node.js app.
-startCommand = '''
-  cd backend && npm start &
-  cd frontend && npx serve -s build -l 3000
-'''
+# Start the backend and frontend concurrently using the start script
+startCommand = "npm start"
 
-[nixpacks]
-# Specify the Node.js version to ensure Nixpacks handles the project correctly.
-nodejs-version = '16.x'
+# Optionally, specify environment variables here or in Railway's environment settings UI
