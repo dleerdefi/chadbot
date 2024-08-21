@@ -1,5 +1,0 @@
-[build]
-# No need to specify a builder; Railway will detect the Dockerfile.
-
-[deploy]
-# No custom start command needed; Dockerfile handles it.
