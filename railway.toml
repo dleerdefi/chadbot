@@ -1,17 +1,14 @@
 [build]
-builder = 'nixpacks'
-buildCommand = '''
-  cd backend && npm install &&
-  cd ../frontend && npm install && npm run build
-'''
+# Make sure these commands are explicitly Node.js-related and not Docker-related.
+buildCommand = "npm install && npm run build"
 
 [deploy]
+# Ensure the start command is simple and straightforward, suitable for your Node.js app.
 startCommand = '''
   cd backend && npm start &
-  npx serve -s frontend/build -l 3000
+  cd frontend && npx serve -s build -l 3000
 '''
-healthcheckPath = '/'
-healthcheckTimeout = 100
 
 [nixpacks]
+# Specify the Node.js version to ensure Nixpacks handles the project correctly.
 nodejs-version = '16.x'
