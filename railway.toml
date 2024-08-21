@@ -1,9 +1,8 @@
 [build]
-# Use the default builder, Railway will handle this via Docker
+# Use the Dockerfile for building the project
 builder = "docker"
 
-[deploy]
-# Start the backend and frontend concurrently using the start script
-startCommand = "npm start"
+# No custom build command needed since Dockerfile handles it
 
-# Optionally, specify environment variables here or in Railway's environment settings UI
+[deploy]
+# No custom start command needed since Dockerfile handles it
