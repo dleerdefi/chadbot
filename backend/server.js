@@ -933,7 +933,12 @@ const startServer = async () => {
     console.log('RAG setup completed successfully');
 
     await connectToMongoDB();
-    await redisClient.connect();
+    
+    if (REDIS_URL) {
+      await redisClient.connect();
+    } else {
+      console.warn('REDIS_URL not provided. Running without Redis.');
+    }
 
     server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
