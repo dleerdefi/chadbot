@@ -1,4 +1,6 @@
 langchain
 pinecone-client
 openai
+langchain_openai
+langchain_pinecone
 python-dotenv
