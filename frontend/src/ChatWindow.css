@@ -57,25 +57,67 @@
 
 .message-content {
   flex-grow: 1;
+  background-color: #333;
+  border-radius: 12px;
+  padding: 10px 15px;
 }
 
 .message-input {
   display: flex;
-  padding: 20px;
+  padding: 15px;
   background-color: #f0f0f0;
 }
 
 .message-input input {
   flex-grow: 1;
   margin-right: 10px;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 16px;
 }
 
 .clickable {
   cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.clickable:hover {
+  opacity: 0.8;
 }
 
 .timestamp {
   font-size: 0.8em;
   color: #888;
   margin-left: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-image {
+    max-height: 150px; /* Adjust header height for smaller screens */
+  }
+
+  .main-chat {
+    height: calc(100vh - 150px); /* Adjust main chat height for smaller screens */
+  }
+
+  .message .profile-pic {
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
+  }
+
+  .message-content {
+    padding: 8px 12px;
+  }
+
+  .message-input {
+    padding: 10px;
+  }
+
+  .message-input input {
+    padding: 8px;
+    font-size: 14px;
+  }
 }

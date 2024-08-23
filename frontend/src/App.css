@@ -173,6 +173,7 @@ body {
   :root {
     --header-height: 150px;
   }
+
   .sidebar, .account-section {
     width: 100%;
     height: auto;
@@ -180,8 +181,32 @@ body {
     border-right: none;
     border-bottom: 1px solid #dee2e6;
   }
+
   .header-image {
     height: var(--header-height);
+  }
+
+  .message-area {
+    padding: 10px;
+  }
+
+  .message .profile-pic {
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
+  }
+
+  .message-content {
+    padding: 8px 12px;
+  }
+
+  .message-input {
+    padding: 10px;
+  }
+
+  .message-input input {
+    padding: 8px;
+    font-size: 14px;
   }
 }
 

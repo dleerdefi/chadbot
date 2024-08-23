@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, signOut } from 'firebase/auth';
 import axios from '../axiosConfig';
 import { useAuth } from '../contexts/AuthContext';
 import '../Login.css'; // Ensure your CSS file is correctly imported
@@ -89,6 +89,17 @@ const Login = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Firebase sign out
+      setUser(null); // Clear the user from context/global state
+      navigate('/login'); // Redirect to login or homepage
+    } catch (error) {
+      console.error('Logout error:', error);
+      setError('An error occurred during logout. Please try again.');
+    }
+  };
+
   return (
     <div className="login-container">
       <form onSubmit={handleEmailPasswordSubmit} className="login-form">
@@ -121,6 +132,11 @@ const Login = () => {
         </button>
         <div className="login-divider"><span>Don't have an account?</span></div>
         <Link to="/register" className="register-link">Create Account</Link>
+        <div className="logout-section">
+          <button type="button" onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        </div>
       </form>
     </div>
   );
