@@ -55,29 +55,45 @@ const maxRequestsPerDay = 10; // Define the limit here
 
 app.use(
 	cors({
-		origin: FRONTEND_URL || "http://localhost:5000",
-		credentials: true,
+	  origin: FRONTEND_URL || "http://localhost:5000",
+	  credentials: true,
 	})
-);
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-app.use((req, res, next) => {
+  );
+  
+  app.use(express.json());
+  app.use(express.static(path.join(__dirname, "../frontend/build")));
+  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+  
+  app.use((req, res, next) => {
 	res.setHeader(
 	  "Content-Security-Policy",
-	  "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com; frame-src 'self' https://accounts.google.com https://*.firebaseapp.com; connect-src 'self' https://*.googleapis.com;"
+	  "default-src 'self'; " +
+	  "script-src 'self' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com; " +
+	  "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com; " +
+	  "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com; " +
+	  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+	  "font-src 'self' https://fonts.gstatic.com; " +
+	  "img-src 'self' data: https://*.googleapis.com; " +
+	  "object-src 'none';"
 	);
+	
+	res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
+	
 	next();
   });
-
-app.use(
+  
+  app.use(
 	session({
-		secret: process.env.JWT_SECRET,
-		resave: false,
-		saveUninitialized: true,
+	  secret: process.env.JWT_SECRET,
+	  resave: false,
+	  saveUninitialized: true,
+	  cookie: {
+		secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+		httpOnly: true, // Mitigate XSS attacks
+		sameSite: 'lax' // CSRF protection
+	  }
 	})
-);
+  );
 
 const globalMessageCache = [];
 const MAX_GLOBAL_MESSAGES = 50;
