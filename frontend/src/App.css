@@ -1,10 +1,15 @@
-/* App.css */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 /* Custom Properties */
 :root {
   --header-height: 100px;
   --sidebar-width: 250px;
   --userbar-width: 250px;
+  --collapsed-width: 60px;
   --color-primary: #333;
   --color-text: #33FF00;
   --color-timestamp: #888;
@@ -18,14 +23,6 @@
   --transition-default: 0.3s ease;
   --shadow-default: 0 1px 2px rgba(0,0,0,0.1);
   --border-radius: 4px;
-  --max-width: 1920px;
-}
-
-/* CSS Reset */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 /* Base Styles */
@@ -40,19 +37,15 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100%;
-  max-width: var(--max-width);
-  margin: 0 auto;
   overflow: hidden;
 }
 
-.header-image {
-  width: 100%;
+.header {
   height: var(--header-height);
-  overflow: hidden;
+  width: 100%;
 }
 
-.header-image img {
+.header__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -62,6 +55,49 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  transition: width var(--transition-default);
+}
+
+.sidebar--collapsed {
+  width: var(--collapsed-width);
+}
+
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-bar {
+  width: var(--userbar-width);
+  transition: width var(--transition-default);
+}
+
+.user-bar--collapsed {
+  width: var(--collapsed-width);
+}
+
+/* Toggle Buttons */
+.toggle-button {
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  position: absolute;
+  z-index: 10;
+}
+
+.toggle-button--sidebar {
+  left: var(--sidebar-width);
+}
+
+.toggle-button--userbar {
+  right: var(--userbar-width);
 }
 
 /* Utility Classes */
@@ -82,6 +118,71 @@ body {
   font-size: 0.8em;
   color: var(--color-timestamp);
   margin-left: 10px;
+}
+
+/* Status Indicators */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.status-indicator--online {
+  background-color: var(--color-success);
+}
+
+.status-indicator--offline {
+  background-color: var(--color-danger);
+}
+
+/* Loading and Error States */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 24px;
+  color: var(--color-accent);
+}
+
+.error {
+  color: var(--color-danger);
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 80px;
+  }
+
+  .main-content {
+    flex-direction: column;
+  }
+
+  .sidebar,
+  .user-bar {
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+  }
+
+  .sidebar--collapsed,
+  .user-bar--collapsed {
+    height: 40px;
+    overflow: hidden;
+  }
+
+  .toggle-button {
+    position: relative;
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
 }
 
 /* Admin Controls */
@@ -230,17 +331,33 @@ body {
     --userbar-width: 100%;
   }
 
-  .main-content {
-    flex-direction: column;
+  .chat-window {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
   }
 
-  .register-form-container {
-    padding: 20px;
+  .sidebar, .account-section {
+    max-height: 200px;
+    overflow-y: auto;
+    border-bottom: 1px solid var(--color-border);
   }
-}
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  .message__profile-pic {
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
+  }
+
+  .message__content {
+    padding: 8px 12px;
+  }
+
+  .message-input {
+    padding: 10px;
+  }
+
+  .message-input__field {
+    padding: 8px;
+    font-size: 14px;
+  }
 }

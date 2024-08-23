@@ -42,6 +42,8 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [userBarCollapsed, setUserBarCollapsed] = useState(false);
 
   const refreshToken = useCallback(async () => {
     const currentUser = auth.currentUser;
@@ -116,8 +118,46 @@ const App = () => {
             <Routes>
               <Route path="/login" element={user ? <Navigate to="/app" /> : <Login />} />
               <Route path="/register" element={user ? <Navigate to="/app" /> : <Register />} />
-              <Route path="/app" element={user ? <ChatWindow /> : <Navigate to="/login" />} />
-              <Route path="/account" element={user ? <Account /> : <Navigate to="/login" />} />
+              <Route path="/app" element={user ? 
+                <div className="app-container">
+                  <header className="header">
+                    <img src="/path-to-header-image.jpg" alt="Header" className="header__image" />
+                  </header>
+                  <div className="main-content">
+                    <Sidebar 
+                      collapsed={sidebarCollapsed}
+                      users={[]} // Pass your users data here
+                      bots={[]} // Pass your bots data here
+                      onUserClick={() => {}} // Implement this function
+                      onProfileClick={() => {}} // Implement this function
+                      onlineUsers={[]} // Pass your online users data here
+                      botsLoading={false} // Set this based on your bots loading state
+                    />
+                    <button 
+                      className="toggle-button toggle-button--sidebar" 
+                      onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    >
+                      {sidebarCollapsed ? '>' : '<'}
+                    </button>
+                    
+                    <ChatWindow />
+                    
+                    <button 
+                      className="toggle-button toggle-button--userbar" 
+                      onClick={() => setUserBarCollapsed(!userBarCollapsed)}
+                    >
+                      {userBarCollapsed ? '<' : '>'}
+                    </button>
+                    <Account 
+                      user={user}
+                      setUser={setUser}
+                      collapsed={userBarCollapsed}
+                    />
+                  </div>
+                </div>
+                : <Navigate to="/login" />} 
+              />
+              <Route path="/account" element={user ? <Account user={user} setUser={setUser} /> : <Navigate to="/login" />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<Navigate to={user ? "/app" : "/login"} />} />
             </Routes>

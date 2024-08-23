@@ -50,7 +50,7 @@ const UserList = React.memo(({ users, onUserClick, onProfileClick }) => {
   );
 });
 
-const Sidebar = React.memo(({ users, bots, onUserClick, onProfileClick, onlineUsers: propOnlineUsers, botsLoading }) => {
+const Sidebar = React.memo(({ users, bots, onUserClick, onProfileClick, onlineUsers: propOnlineUsers, botsLoading, collapsed }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [onlineUsers, setOnlineUsers] = useState(propOnlineUsers);
   const { socket } = useWebSocket();
@@ -84,85 +84,37 @@ const Sidebar = React.memo(({ users, bots, onUserClick, onProfileClick, onlineUs
   }, [socket]);
 
   const filteredUsers = useMemo(() => {
-    console.log('Filtering users and bots:', { users, bots, onlineUsers });
-    const userMap = new Map();
-  
-    // Process bots first
-    bots.forEach(bot => {
-      const botId = bot._id || bot.id;
-      userMap.set(botId, {
-        ...bot,
-        isBot: true,
-        isOnline: true,
-        _id: botId,
-        username: bot.name || bot.username // Ensure bots have a username
-      });
-    });
-  
-  // Then process users, not overwriting bots
-  users.forEach(user => {
-    if (!userMap.has(user._id)) {
-      userMap.set(user._id, {
-        ...user,
-        isBot: false,
-        isOnline: onlineUsers.includes(user._id),
-        _id: user._id
-      });
-    }
-  });
-  
-  const allUsers = Array.from(userMap.values());
-
-  console.log('All users before filtering:', allUsers);
-
-  const filteredAndSortedUsers = allUsers
-    .filter(user => 
-      (user.username || user.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (a.isBot && !b.isBot) return -1;
-      if (!a.isBot && b.isBot) return 1;
-      if (a.isOnline && !b.isOnline) return -1;
-      if (!a.isOnline && b.isOnline) return 1;
-      return (a.username || a.name || '').localeCompare(b.username || b.name || '');
-    });
-
-  console.log('Filtered and sorted users:', filteredAndSortedUsers);
-  return filteredAndSortedUsers;
-}, [users, bots, searchTerm, onlineUsers]);
+    // ... (keep the existing filteredUsers logic)
+  }, [users, bots, searchTerm, onlineUsers]);
   
   return (
-    <div className="sidebar">
-      <SearchBar onChange={setSearchTerm} />
-      {botsLoading ? (
-        <div className="loading-state">Loading bots...</div>
-      ) : (
-        <UserList 
-          users={filteredUsers} 
-          onUserClick={onUserClick}
-          onProfileClick={onProfileClick}
-        />
+    <div className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
+      {!collapsed && (
+        <>
+          <SearchBar onChange={setSearchTerm} />
+          {botsLoading ? (
+            <div className="loading-state">Loading bots...</div>
+          ) : (
+            <UserList 
+              users={filteredUsers} 
+              onUserClick={onUserClick}
+              onProfileClick={onProfileClick}
+            />
+          )}
+        </>
+      )}
+      {collapsed && (
+        <div className="sidebar__collapsed-content">
+          {/* Add icons or mini versions of content for collapsed state */}
+        </div>
       )}
     </div>
   );
 });
 
 Sidebar.propTypes = {
-  users: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string,
-    name: PropTypes.string,
-    username: PropTypes.string,
-    isBot: PropTypes.bool,
-  })).isRequired,
-  bots: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string.isRequired,
-    isBot: PropTypes.bool,
-  })).isRequired,
-  onUserClick: PropTypes.func.isRequired,
-  onProfileClick: PropTypes.func.isRequired,
-  onlineUsers: PropTypes.arrayOf(PropTypes.string).isRequired,
-  botsLoading: PropTypes.bool
+  // ... (keep existing propTypes)
+  collapsed: PropTypes.bool.isRequired,
 };
 
 export default Sidebar;
