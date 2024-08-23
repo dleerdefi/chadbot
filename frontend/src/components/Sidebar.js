@@ -50,7 +50,15 @@ const UserList = React.memo(({ users, onUserClick, onProfileClick }) => {
   );
 });
 
-const Sidebar = React.memo(({ users, bots, onUserClick, onProfileClick, onlineUsers: propOnlineUsers, botsLoading, collapsed }) => {
+const Sidebar = React.memo(({
+  users = [], 
+  bots = [], 
+  onUserClick = () => {}, 
+  onProfileClick = () => {}, 
+  onlineUsers: propOnlineUsers = [], 
+  botsLoading = false, 
+  collapsed = false 
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [onlineUsers, setOnlineUsers] = useState(propOnlineUsers);
   const { socket } = useWebSocket();
@@ -84,7 +92,51 @@ const Sidebar = React.memo(({ users, bots, onUserClick, onProfileClick, onlineUs
   }, [socket]);
 
   const filteredUsers = useMemo(() => {
-    // ... (keep the existing filteredUsers logic)
+    console.log('Filtering users and bots:', { users, bots, onlineUsers });
+    const userMap = new Map();
+  
+    // Process bots first
+    (bots || []).forEach(bot => {
+      const botId = bot._id || bot.id;
+      userMap.set(botId, {
+        ...bot,
+        isBot: true,
+        isOnline: true,
+        _id: botId,
+        username: bot.name || bot.username // Ensure bots have a username
+      });
+    });
+  
+    // Then process users, not overwriting bots
+    (users || []).forEach(user => {
+      if (!userMap.has(user._id)) {
+        userMap.set(user._id, {
+          ...user,
+          isBot: false,
+          isOnline: onlineUsers.includes(user._id),
+          _id: user._id
+        });
+      }
+    });
+  
+    const allUsers = Array.from(userMap.values());
+  
+    console.log('All users before filtering:', allUsers);
+  
+    const filteredAndSortedUsers = allUsers
+      .filter(user => 
+        (user.username || user.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .sort((a, b) => {
+        if (a.isBot && !b.isBot) return -1;
+        if (!a.isBot && b.isBot) return 1;
+        if (a.isOnline && !b.isOnline) return -1;
+        if (!a.isOnline && b.isOnline) return 1;
+        return (a.username || a.name || '').localeCompare(b.username || b.name || '');
+      });
+  
+    console.log('Filtered and sorted users:', filteredAndSortedUsers);
+    return filteredAndSortedUsers;
   }, [users, bots, searchTerm, onlineUsers]);
   
   return (
@@ -105,7 +157,8 @@ const Sidebar = React.memo(({ users, bots, onUserClick, onProfileClick, onlineUs
       )}
       {collapsed && (
         <div className="sidebar__collapsed-content">
-          {/* Add icons or mini versions of content for collapsed state */}
+          <div className="sidebar__collapsed-icon">☰</div>
+          {/* You can add more icons or a user count here */}
         </div>
       )}
     </div>
@@ -113,7 +166,12 @@ const Sidebar = React.memo(({ users, bots, onUserClick, onProfileClick, onlineUs
 });
 
 Sidebar.propTypes = {
-  // ... (keep existing propTypes)
+  users: PropTypes.array,
+  bots: PropTypes.array,
+  onUserClick: PropTypes.func,
+  onProfileClick: PropTypes.func,
+  onlineUsers: PropTypes.array,
+  botsLoading: PropTypes.bool,
   collapsed: PropTypes.bool.isRequired,
 };
 

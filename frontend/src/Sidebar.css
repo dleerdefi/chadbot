@@ -4,6 +4,25 @@
   padding: 1.25rem;
   overflow-y: auto;
   height: 100%;
+  transition: width 0.3s ease; /* Add smooth transition for width changes */
+}
+
+/* Add styles for collapsed sidebar */
+.sidebar--collapsed {
+  width: 60px; /* Adjust this value as needed */
+  padding: 1.25rem 0; /* Remove horizontal padding when collapsed */
+}
+
+.sidebar__collapsed-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar__collapsed-icon {
+  font-size: 24px;
+  color: var(--color-text);
+  margin-bottom: 1rem;
 }
 
 .search-bar {
@@ -16,8 +35,14 @@
   color: var(--color-text);
 }
 
+.users-section {
+  margin-top: 1rem;
+}
+
 .user-list {
   list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 .user-item {
@@ -25,6 +50,11 @@
   align-items: center;
   padding: 0.625rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.user-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .user-avatar {
@@ -61,11 +91,37 @@
   color: var(--color-timestamp);
 }
 
+.empty-state {
+  color: var(--color-text);
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.loading-state {
+  color: var(--color-text);
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* Improve clickable elements */
+.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.clickable:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
     height: auto;
     max-height: 50vh;
+  }
+
+  .sidebar--collapsed {
+    max-height: 40px; /* Adjust this value for mobile collapsed state */
   }
 
   .user-avatar {
