@@ -5,6 +5,7 @@ import ChatWindow from './components/ChatWindow';
 import Login from './components/Login';
 import Register from './components/Register';
 import Account from './components/AccountSection';
+import Sidebar from './components/Sidebar';
 import ResetPassword from './components/ResetPassword';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
