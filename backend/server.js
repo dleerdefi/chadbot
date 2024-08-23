@@ -65,11 +65,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use((req, res, next) => {
 	res.setHeader(
-		"Content-Security-Policy",
-		"script-src 'self' 'unsafe-inline' https://apis.google.com; frame-src 'self' https://accounts.google.com;"
+	  "Content-Security-Policy",
+	  "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com; frame-src 'self' https://accounts.google.com https://*.firebaseapp.com; connect-src 'self' https://*.googleapis.com;"
 	);
 	next();
-});
+  });
 
 app.use(
 	session({

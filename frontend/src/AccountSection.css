@@ -1,8 +1,9 @@
 .account-section {
-    width: 250px; /* Match the width of the sidebar */
+    width: 100%; /* Change from 250px to 100% for responsiveness */
+    max-width: 250px; /* Ensure it doesn't exceed the sidebar width */
     padding: 10px;
     box-sizing: border-box;
-    background-color: #333; /* Match your theme */
+    background-color: #333;
     color: var(--text-color);
     overflow-y: auto; /* Allow scrolling if content is too long */
 }
@@ -14,8 +15,9 @@
 }
 
 .account-section img {
-    width: 100px;
-    height: 100px;
+    width: 50%; /* Change to percentage to ensure responsiveness */
+    max-width: 100px; /* Prevent the image from getting too large */
+    height: auto; /* Maintain aspect ratio */
     object-fit: cover;
     border-radius: 50%;
     margin-bottom: 10px;
@@ -45,4 +47,16 @@
 
 .account-section button:hover {
     background-color: var(--accent-hover-color);
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 768px) {
+    .account-section {
+        max-width: 100%; /* Allow full width on smaller screens */
+    }
+
+    .account-section img {
+        width: 70px; /* Reduce image size on smaller screens */
+        height: 70px;
+    }
 }
