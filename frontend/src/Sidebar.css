@@ -1,115 +1,135 @@
 .sidebar {
-  width: 250px;
-  background-color: #333;
-  padding: 20px;
-  overflow-y: auto; /* Allow scrolling if content exceeds viewport height */
-  height: 100vh; /* Ensure the sidebar takes full height */
-  box-sizing: border-box; /* Include padding in the width calculation */
+  width: var(--sidebar-width);
+  background-color: var(--color-primary);
+  padding: 1.25rem;
+  overflow-y: auto;
+  height: 100%;
+  transition: width 0.3s ease; /* Add smooth transition for width changes */
+}
+
+/* Add styles for collapsed sidebar */
+.sidebar--collapsed {
+  width: 60px; /* Adjust this value as needed */
+  padding: 1.25rem 0; /* Remove horizontal padding when collapsed */
+}
+
+.sidebar__collapsed-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar__collapsed-icon {
+  font-size: 24px;
+  color: var(--color-text);
+  margin-bottom: 1rem;
 }
 
 .search-bar {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-sizing: border-box; /* Include padding in the width calculation */
+  padding: 0.625rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+}
+
+.users-section {
+  margin-top: 1rem;
+}
+
+.user-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 .user-item {
   display: flex;
   align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  transition: background-color 0.3s ease;
+  padding: 0.625rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.user-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  margin-right: 10px;
+  margin-right: 0.625rem;
   object-fit: cover;
 }
 
 .username {
   flex-grow: 1;
-  color: #fff; /* Ensure text is visible on the dark background */
-}
-
-.clickable {
-  cursor: pointer;
-}
-
-.user-item:hover {
-  background-color: #444; /* Change to a more subtle hover effect */
+  color: var(--color-text);
 }
 
 .status-indicator {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
-  margin-right: 10px;
+  margin-right: 0.625rem;
 }
 
 .online .status-indicator {
-  background-color: #28a745;
+  background-color: var(--color-success);
 }
 
 .offline .status-indicator {
-  background-color: #dc3545;
+  background-color: var(--color-danger);
 }
 
 .bot-indicator {
-  margin-left: 5px;
+  margin-left: 0.3125rem;
   font-size: 0.8em;
-  color: #888;
+  color: var(--color-timestamp);
 }
 
 .empty-state {
-  color: #888;
-  font-style: italic;
+  color: var(--color-text);
   text-align: center;
-  padding: 20px 0;
+  padding: 1rem 0;
 }
 
-ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+.loading-state {
+  color: var(--color-text);
+  text-align: center;
+  padding: 1rem 0;
 }
 
-li {
-  margin-bottom: 5px;
+/* Improve clickable elements */
+.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
 }
 
-/* Responsive Design */
+.clickable:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
     height: auto;
-    padding: 10px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000; /* Ensure it stays on top of other content */
-    background-color: rgba(51, 51, 51, 0.95); /* Semi-transparent background */
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5); /* Add a shadow to the top */
+    max-height: 50vh;
   }
 
-  .user-item {
-    padding: 8px;
+  .sidebar--collapsed {
+    max-height: 40px; /* Adjust this value for mobile collapsed state */
   }
 
   .user-avatar {
     width: 28px;
     height: 28px;
-    margin-right: 8px;
   }
 
   .username {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 }
