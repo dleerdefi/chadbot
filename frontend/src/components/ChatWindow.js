@@ -1,17 +1,3 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { useWebSocket } from "../contexts/WebSocketContext";
-import axios from "axios";
-import moment from "moment";
-import Sidebar from "./Sidebar";
-import AccountSection from "./AccountSection";
-import UserProfileCard from "./UserProfileCard";
-import AutocompleteInput from "./AutocompleteInput";
-import headerImage from "../images/header-image.png";
-import "../ChatWindow.css";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
-
 const ChatWindow = () => {
 	const { user, setUser } = useAuth();
 	const { socket, sendMessage, messages, updateMessages } = useWebSocket();
@@ -49,7 +35,6 @@ const ChatWindow = () => {
 	const scrollToBottom = useCallback(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, []);
-
 	// Use scrollToBottom in useEffect
 	useEffect(() => {
 		scrollToBottom();
@@ -118,7 +103,6 @@ const ChatWindow = () => {
 		},
 		[user, showError]
 	);
-
 	const handleUnbanByUsername = useCallback(
 		async (username) => {
 			try {
@@ -191,7 +175,6 @@ const ChatWindow = () => {
 		},
 		[user, updateMessages, showError]
 	);
-
 	const handleSendMessage = useCallback(
 		async (event) => {
 			event.preventDefault();
@@ -252,7 +235,6 @@ const ChatWindow = () => {
 			sendMessage,
 		]
 	);
-
 	const handleUserClick = useCallback((clickedUser, showProfile, event) => {
 		if (event) {
 			event.preventDefault();
@@ -306,7 +288,6 @@ const ChatWindow = () => {
 		},
 		[user, updateMessages, showError]
 	);
-
 	const fetchUsers = useCallback(async () => {
 		if (!user || !user.token) return;
 		try {
@@ -360,7 +341,6 @@ const ChatWindow = () => {
 			setBotsLoading(false);
 		}
 	}, [showError]);
-
 	useEffect(() => {
 		if (user && user.token) {
 			fetchUsers();
@@ -405,7 +385,6 @@ const ChatWindow = () => {
 			socket.on("userUnbanned", handleUserUnbanned);
 			socket.on("userStatusUpdate", handleUserStatusUpdate);
 			socket.on("rateLimitError", handleRateLimitError);
-
 			socket.on("error", (error) => {
 				console.error("Socket error:", error);
 				showError(`Socket error: ${error.message}`);
@@ -480,7 +459,6 @@ const ChatWindow = () => {
 			};
 		}
 	}, [socket]);
-
 	const Message = useMemo(
 		() =>
 			React.memo(({ message }) => (
@@ -531,7 +509,6 @@ const ChatWindow = () => {
 			)),
 		[handleUserClick, user, handleDeleteMessage, handleUnbanUser, handleBanByUsername]
 	);
-
 	if (!user) {
 		return <div>No user data available. Please try logging in again.</div>;
 	}
