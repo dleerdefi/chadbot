@@ -1,122 +1,120 @@
 :root {
-    --color-bg-account: #333;
-    --color-text: #33FF00;
-    --color-accent: #007bff;
-    --color-accent-hover: #0056b3;
-    --color-input-bg: #222;
-    --color-error: #dc3545;
-    --color-success: #28a745;
-    --border-radius: 4px;
-    --transition-default: 0.3s ease;
-    --account-width: 250px;
-    --account-width-collapsed: 60px;
-  }
-  
+  --color-bg-account: #333;
+  --color-text: #33FF00;
+  --color-accent: #007bff;
+  --color-accent-hover: #0056b3;
+  --color-input-bg: #222;
+  --color-error: #dc3545;
+  --color-success: #28a745;
+  --border-radius: 4px;
+  --transition-default: 0.3s ease;
+  --account-width: 250px;
+  --account-width-collapsed: 60px;
+}
+
+.account-section {
+  width: var(--account-width);
+  padding: 1rem;
+  background-color: var(--color-bg-account);
+  color: var(--color-text);
+  overflow-y: auto;
+  transition: width var(--transition-default);
+}
+
+.account-section--collapsed {
+  width: var(--account-width-collapsed);
+  overflow: hidden;
+}
+
+.account-section__title {
+  margin: 0 0 1rem;
+  color: var(--color-accent);
+}
+
+.account-section__avatar {
+  width: 50px;  /* Adjusted for better sizing */
+  height: 50px; /* Adjusted for better sizing */
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.account-section__file-input {
+  margin-bottom: 1rem;
+}
+
+.account-section__email {
+  margin-bottom: 1rem;
+}
+
+.account-section__field {
+  margin-bottom: 1rem;
+}
+
+.account-section__input,
+.account-section__textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--border-radius);
+  background-color: var(--color-input-bg);
+  color: var(--color-text);
+  transition: border-color var(--transition-default);
+}
+
+.account-section__input:focus,
+.account-section__textarea:focus {
+  outline: none;
+  border-color: var(--color-accent-hover);
+}
+
+.account-section__button {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color var(--transition-default);
+}
+
+.account-section__button:hover,
+.account-section__button:focus {
+  background-color: var(--color-accent-hover);
+}
+
+.account-section__button--logout {
+  background-color: var(--color-error);
+}
+
+.account-section__button--delete {
+  background-color: var(--color-error);
+}
+
+.account-section__error {
+  color: var(--color-error);
+  margin-bottom: 1rem;
+}
+
+.account-section__success {
+  color: var(--color-success);
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
   .account-section {
-    width: 100%;
-    max-width: var(--account-width);
-    padding: 1rem;
-    background-color: var(--color-bg-account);
-    color: var(--color-text);
-    overflow-y: auto;
-    transition: max-width var(--transition-default);
+      width: 100%;
   }
-  
+
   .account-section--collapsed {
-    max-width: var(--account-width-collapsed);
-    overflow: hidden;
-  }
-  
-  .account-section__title {
-    margin: 0 0 1rem;
-    color: var(--color-accent);
-  }
-  
-  .account-section__avatar {
-    width: 50%;
-    max-width: 100px;
-    height: auto;
-    object-fit: cover;
-    border-radius: 50%;
-    margin-bottom: 1rem;
-  }
-  
-  .account-section__file-input {
-    margin-bottom: 1rem;
-  }
-  
-  .account-section__email {
-    margin-bottom: 1rem;
-  }
-  
-  .account-section__field {
-    margin-bottom: 1rem;
-  }
-  
-  .account-section__input,
-  .account-section__textarea {
-    width: 100%;
-    padding: 0.5rem;
-    margin-top: 0.25rem;
-    border: 1px solid var(--color-accent);
-    border-radius: var(--border-radius);
-    background-color: var(--color-input-bg);
-    color: var(--color-text);
-    transition: border-color var(--transition-default);
-  }
-  
-  .account-section__input:focus,
-  .account-section__textarea:focus {
-    outline: none;
-    border-color: var(--color-accent-hover);
-  }
-  
-  .account-section__button {
-    width: 100%;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-    background-color: var(--color-accent);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color var(--transition-default);
-  }
-  
-  .account-section__button:hover,
-  .account-section__button:focus {
-    background-color: var(--color-accent-hover);
-  }
-  
-  .account-section__button--logout {
-    background-color: var(--color-error);
-  }
-  
-  .account-section__button--delete {
-    background-color: var(--color-error);
-  }
-  
-  .account-section__error {
-    color: var(--color-error);
-    margin-bottom: 1rem;
-  }
-  
-  .account-section__success {
-    color: var(--color-success);
-    margin-bottom: 1rem;
-  }
-  
-  @media (max-width: 768px) {
-    .account-section {
-      max-width: 100%;
-    }
-  
-    .account-section--collapsed {
       max-height: 40px;
-    }
-  
-    .account-section__avatar {
+  }
+
+  .account-section__avatar {
       width: 70px;
       height: 70px;
-    }
   }
+}
