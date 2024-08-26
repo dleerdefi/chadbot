@@ -1,5 +1,24 @@
+
 *, *::before, *::after {
   box-sizing: border-box;
+} 
+
+:root {
+  --header-height: 200px;
+  --sidebar-width: 250px;
+  --userbar-width: 250px;
+  --primary-color: #333;
+  --text-color: #33FF00;
+  --timestamp-color: #888;
+  --accent-color: #007bff;
+  --accent-hover-color: #0056b3;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --mobile-breakpoint: 768px;
+}
+
+body {
+  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -200,14 +219,52 @@ body {
   border: none;
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background-color var(--transition-default);
+  transition: background-color 0.3s ease;
 }
 
-.admin-controls__button:hover {
-  background-color: var(--color-accent-hover);
+.admin-controls button:hover {
+  background-color: var(--accent-hover-color);
 }
 
-/* Status Indicators */
+/* Responsive design */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 150px;
+  }
+  .sidebar, .account-section {
+    width: 100%;
+    height: auto;
+    min-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #dee2e6;
+  }
+  .header-image {
+    height: var(--header-height);
+  }
+}
+
+/* Additional styles for better visual hierarchy */
+.message strong {
+  font-weight: bold;
+  color: var(--accent-color);
+}
+
+.message-input button {
+  padding: 10px 20px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 16px;
+}
+
+.message-input button:hover {
+  background-color: var(--accent-hover-color);
+}
+
+/* Styles for online/offline indicators */
 .status-indicator {
   display: inline-block;
   width: 10px;
