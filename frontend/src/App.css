@@ -57,11 +57,13 @@ body {
 }
 
 .sidebar {
+  flex: 0 0 var(--sidebar-width);
   width: var(--sidebar-width);
   transition: width var(--transition-default);
 }
 
 .sidebar--collapsed {
+  flex: 0 0 var(--collapsed-width);
   width: var(--collapsed-width);
 }
 
@@ -72,11 +74,13 @@ body {
 }
 
 .user-bar {
+  flex: 0 0 var(--userbar-width);
   width: var(--userbar-width);
   transition: width var(--transition-default);
 }
 
 .user-bar--collapsed {
+  flex: 0 0 var(--collapsed-width);
   width: var(--collapsed-width);
 }
 
