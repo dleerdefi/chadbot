@@ -1,5 +1,5 @@
 :root {
-  --header-height: 200px;
+  --header-height: 15vh;
   --sidebar-width: 250px;
   --userbar-width: 250px;
   --primary-color: #333;
@@ -9,6 +9,7 @@
   --accent-hover-color: #0056b3;
   --success-color: #28a745;
   --danger-color: #dc3545;
+  --mobile-breakpoint: 768px;
 }
 
 body {
@@ -31,7 +32,6 @@ body {
 .header-image {
   width: 100%;
   height: var(--header-height);
-  max-height: var(--header-height);
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -169,19 +169,27 @@ body {
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (max-width: var(--mobile-breakpoint)) {
   :root {
-    --header-height: 150px;
+    --header-height: 10vh;
+    --sidebar-width: 100%;
+    --userbar-width: 100%;
   }
+  
+  .chat-window {
+    flex-direction: column;
+  }
+  
   .sidebar, .account-section {
     width: 100%;
     height: auto;
-    min-height: 200px;
+    min-height: 100px;
     border-right: none;
     border-bottom: 1px solid #dee2e6;
   }
-  .header-image {
-    height: var(--header-height);
+  
+  .main-chat {
+    height: calc(90vh - 100px); /* Adjust for mobile header and sidebar */
   }
 }
 
