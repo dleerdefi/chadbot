@@ -114,3 +114,5 @@ dist
 backend/serviceAccountKey.json
 
 libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+frontend/build
