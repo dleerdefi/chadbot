@@ -1,3 +1,17 @@
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useWebSocket } from "../contexts/WebSocketContext";
+import axios from "axios";
+import moment from "moment";
+import Sidebar from "./Sidebar";
+import AccountSection from "./AccountSection";
+import UserProfileCard from "./UserProfileCard";
+import AutocompleteInput from "./AutocompleteInput";
+import headerImage from "../images/header-image.png";
+import "../ChatWindow.css";
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+
 const ChatWindow = () => {
 	const { user, setUser } = useAuth();
 	const { socket, sendMessage, messages, updateMessages } = useWebSocket();
