@@ -4,7 +4,7 @@ import { useWebSocket } from "../contexts/WebSocketContext";
 import axios from "axios";
 import moment from "moment";
 import Sidebar from "./Sidebar";
-import AccountSection from "./AccountSection";
+import AccountSection from "../pages/Account/Account";
 import UserProfileCard from "./UserProfileCard";
 import AutocompleteInput from "./AutocompleteInput";
 import headerImage from "../images/header-image.png";
