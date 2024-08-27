@@ -2,13 +2,11 @@ import React, { useState, useMemo } from "react";
 import { useWebSocket } from "../../contexts/WebSocketContext";
 import UserList from "../UserList/UserList";
 import SearchBar from "../SearchBar/SearchBar";
-import { useChat } from "../../contexts/ChatContext";
 import "./Sidebar.css";
 
 const Sidebar = ({ onUserClick = () => {}, onProfileClick = () => {}, collapsed = false }) => {
 	const [searchTerm, setSearchTerm] = useState("");
-	const { onlineUsers } = useWebSocket();
-	const { bots, users, isBotLoading: botsLoading } = useChat();
+	const { onlineUsers, bots, users, isBotLoading  } = useWebSocket();
 
 	const filteredUsers = useMemo(() => {
 		const userMap = new Map();
@@ -52,12 +50,13 @@ const Sidebar = ({ onUserClick = () => {}, onProfileClick = () => {}, collapsed 
 		return filteredAndSortedUsers;
 	}, [users, bots, searchTerm, onlineUsers]);
 
+
 	return (
 		<div className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}>
 			{!collapsed && (
 				<>
 					<SearchBar onChange={setSearchTerm} />
-					{botsLoading ? (
+					{isBotLoading ? (
 						<div className="loading-state">Loading bots...</div>
 					) : (
 						<UserList

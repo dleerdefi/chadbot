@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import HeaderImage from "../../images/header-image.png";
 import Sidebar from "../../components/SideBar/Sidebar";
 import ChatWindow from "../../components/ChatWindow/ChatWindow";
-import "./Home.css"
+import "./Home.css";
 
 const Home = () => {
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
 	return (
 		<div className="home">
 			<header className="header">

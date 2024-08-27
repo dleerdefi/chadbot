@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from '../axiosConfig';
-import { useAuth } from '../contexts/AuthContext'; // Import this if you have an AuthContext
+import { useAuth } from '../../contexts/AuthContext';
 
 const ImageUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -9,7 +9,7 @@ const ImageUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { logout } = useAuth(); // Use this if you have an AuthContext for handling logout
+  const { logout } = useAuth(); 
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];

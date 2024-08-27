@@ -4,19 +4,25 @@ import { useWebSocket } from "../../contexts/WebSocketContext";
 import axios from "axios";
 import UserProfileCard from "../UserProfileCard/UserProfileCard";
 import AutocompleteInput from "../AutocompleteInput/AutocompleteInput";
-import "./ChatWindow.css";
 import Message from "../Message/Message";
+import "./ChatWindow.css";
+import { useApp } from "../../contexts/AppContext";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 const ChatWindow = () => {
 	const { user } = useAuth();
-	const { socket, sendMessage, messages, updateMessages } = useWebSocket();
-	const [allUsers, setAllUsers] = useState([]);
-	const [bots, setBots] = useState([]);
+	const { setError } = useApp();
+	const {
+		socket,
+		sendMessage,
+		messages,
+		setMessages,
+		setOnlineUsers,
+		typingBots,
+		users,
+	} = useWebSocket();
 	const [input, setInput] = useState("");
-	const [error, setError] = useState(null);
-	const [errorTimeout, setErrorTimeout] = useState(null);
 	const [selectedUser, setSelectedUser] = useState(null);
 	const [cardPosition, setCardPosition] = useState({
 		top: "50%",
@@ -24,20 +30,7 @@ const ChatWindow = () => {
 		transform: "translate(-50%, -50%)",
 	});
 	const messagesEndRef = useRef(null);
-	const [onlineUsers, setOnlineUsers] = useState([]);
-	const [botsLoading, setBotsLoading] = useState(true);
-	const [typingBots, setTypingBots] = useState({});
 	const [inputPrefix, setInputPrefix] = useState("");
-
-	const showError = useCallback(
-		(message, duration = 5000) => {
-			setError(message);
-			if (errorTimeout) clearTimeout(errorTimeout);
-			const timeout = setTimeout(() => setError(null), duration);
-			setErrorTimeout(timeout);
-		},
-		[errorTimeout]
-	);
 
 	const sanitizeInput = useCallback((input) => {
 		return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -46,36 +39,10 @@ const ChatWindow = () => {
 	const scrollToBottom = useCallback(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, []);
-	// Use scrollToBottom in useEffect
+
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages, scrollToBottom]);
-
-	const handleUserStatusUpdate = useCallback(({ userId, status }) => {
-		setOnlineUsers((prevOnlineUsers) => {
-			if (status === "online" && !prevOnlineUsers.includes(userId)) {
-				return [...prevOnlineUsers, userId];
-			} else if (status === "offline") {
-				return prevOnlineUsers.filter((id) => id !== userId);
-			}
-			return prevOnlineUsers;
-		});
-		setAllUsers((prevUsers) =>
-			prevUsers.map((user) =>
-				user._id === userId && !user.isBot
-					? { ...user, isOnline: status === "online" }
-					: user
-			)
-		);
-	}, []);
-
-	const handleRateLimitError = useCallback(
-		(error) => {
-			console.error("Rate limit error:", error);
-			showError(`Rate limit exceeded: ${error.message}`);
-		},
-		[showError]
-	);
 
 	const handleBanByUsername = useCallback(
 		async (username) => {
@@ -92,26 +59,26 @@ const ChatWindow = () => {
 				);
 				console.log("Ban response:", response.data);
 				if (response.data.success) {
-					showError(
+					setError(
 						`User ${username} has been banned successfully and their messages have been removed.`
 					);
 					// The messages will be removed by the 'userBanned' socket event
 				} else {
-					showError(response.data.message);
+					setError(response.data.message);
 				}
 			} catch (error) {
 				console.error(
 					"Error banning user:",
 					error.response ? error.response.data : error.message
 				);
-				showError(
+				setError(
 					`Failed to ban user: ${
 						error.response ? error.response.data.message : error.message
 					}`
 				);
 			}
 		},
-		[user, showError]
+		[user, setError]
 	);
 	const handleUnbanByUsername = useCallback(
 		async (username) => {
@@ -128,24 +95,23 @@ const ChatWindow = () => {
 				);
 				console.log("Unban response:", response.data);
 				if (response.data.success) {
-					showError(`User ${username} has been unbanned successfully.`);
-					// Optionally, you can update the messages or user list here
+					setError(`User ${username} has been unbanned successfully.`);
 				} else {
-					showError(response.data.message);
+					setError(response.data.message);
 				}
 			} catch (error) {
 				console.error(
 					"Error unbanning user:",
 					error.response ? error.response.data : error.message
 				);
-				showError(
+				setError(
 					`Failed to unban user: ${
 						error.response ? error.response.data.message : error.message
 					}`
 				);
 			}
 		},
-		[user, showError]
+		[user, setError]
 	);
 
 	const handleUnbanUser = useCallback(
@@ -163,27 +129,27 @@ const ChatWindow = () => {
 					}
 				);
 				console.log("Unban response:", response.data);
-				updateMessages((prevMessages) =>
+				setMessages((prevMessages) =>
 					prevMessages.map((msg) =>
 						msg.user._id === messageUserId
 							? { ...msg, user: { ...msg.user, isBanned: false } }
 							: msg
 					)
 				);
-				showError("User has been unbanned successfully.");
+				setError("User has been unbanned successfully.");
 			} catch (error) {
 				console.error(
 					"Error unbanning user:",
 					error.response ? error.response.data : error.message
 				);
-				showError(
+				setError(
 					`Failed to unban user: ${
 						error.response ? error.response.data.message : error.message
 					}`
 				);
 			}
 		},
-		[user, updateMessages, showError]
+		[user, setMessages, setError]
 	);
 	const handleSendMessage = useCallback(
 		async (event) => {
@@ -193,7 +159,7 @@ const ChatWindow = () => {
 			const sanitizedInput = sanitizeInput(input);
 
 			if (user.isBanned) {
-				showError("You are banned and cannot send messages.");
+				setError("You are banned and cannot send messages.");
 				return;
 			}
 
@@ -209,12 +175,12 @@ const ChatWindow = () => {
 							handleUnbanByUsername(username);
 							break;
 						default:
-							showError(
+							setError(
 								"Invalid command. Available commands: /ban username, /unban username"
 							);
 					}
 				} else {
-					showError("Invalid command format. Use: /command username");
+					setError("Invalid command format. Use: /command username");
 				}
 				setInput("");
 				return;
@@ -228,9 +194,8 @@ const ChatWindow = () => {
 					room: "general",
 				});
 				setInput("");
-				setInputPrefix(""); // Clear the prefix after sending
-			} catch (error) {
-				// ... existing error handling ...
+				setInputPrefix("");
+			} catch (err) {
 			}
 		},
 		[
@@ -239,7 +204,7 @@ const ChatWindow = () => {
 			user,
 			socket,
 			sanitizeInput,
-			showError,
+			setError,
 			handleBanByUsername,
 			handleUnbanByUsername,
 			sendMessage,
@@ -250,7 +215,6 @@ const ChatWindow = () => {
 			event.preventDefault();
 			event.stopPropagation();
 		}
-		console.log("User clicked:", clickedUser, "Show Profile:", showProfile);
 		if (showProfile) {
 			setSelectedUser(clickedUser);
 			const newPosition = {
@@ -268,7 +232,6 @@ const ChatWindow = () => {
 	const handleBotClick = useCallback((bot) => {
 		console.log("Bot clicked:", bot);
 		setInputPrefix(`@${bot.name} `);
-		// You can add additional logic here for bot interactions if needed
 	}, []);
 
 	const closeProfileCard = useCallback(() => {
@@ -280,134 +243,24 @@ const ChatWindow = () => {
 			console.log("Attempting to delete message with ID:", messageId);
 			if (!messageId) {
 				console.error("Invalid message ID");
-				showError("Cannot delete message: Invalid ID");
+				setError("Cannot delete message: Invalid ID");
 				return;
 			}
 			try {
 				await axios.delete(`${API_URL}/api/messages/${messageId}`, {
 					headers: { Authorization: `Bearer ${user.token}` },
 				});
-				updateMessages((prevMessages) =>
+				setMessages((prevMessages) =>
 					prevMessages.filter((msg) => msg.id !== messageId && msg._id !== messageId)
 				);
-				showError("Message deleted successfully.");
+				setError("Message deleted successfully.");
 			} catch (error) {
 				console.error("Error deleting message:", error);
-				showError("Failed to delete message. Please try again.");
+				setError("Failed to delete message. Please try again.");
 			}
 		},
-		[user, updateMessages, showError]
+		[user, setMessages, setError]
 	);
-	const fetchUsers = useCallback(async () => {
-		if (!user || !user.token) return;
-		try {
-			const response = await axios.get(`${API_URL}/api/all-users`, {
-				headers: {
-					Authorization: `Bearer ${user.token}`,
-				},
-			});
-			const usersWithOnlineStatus = response.data.map((u) => ({
-				...u,
-				isOnline: u.isBot || onlineUsers.includes(u._id),
-				bio: u.bio, // Include bio here
-			}));
-			setAllUsers(usersWithOnlineStatus);
-		} catch (error) {
-			console.error(
-				"Error fetching users:",
-				error.response ? error.response.data : error.message
-			);
-			showError(`Failed to load users. Please try again later.`);
-		}
-	}, [user, showError, onlineUsers]);
-
-	const fetchBots = useCallback(async () => {
-		setBotsLoading(true);
-		try {
-			const response = await axios.get(`${API_URL}/api/bots`);
-			const botsWithOnlineStatus = response.data.map((bot) => ({
-				...bot,
-				isBot: true,
-				isOnline: true,
-				_id: bot._id || bot.id, // Ensure bots have a consistent _id property
-				bio: bot.bio, // Include bio here
-			}));
-			setBots(botsWithOnlineStatus);
-		} catch (error) {
-			console.error(
-				"Error fetching bots:",
-				error.response ? error.response.data : error.message
-			);
-			showError(
-				`Failed to load bots. Error: ${
-					error.response ? JSON.stringify(error.response.data) : error.message
-				}`
-			);
-		} finally {
-			setBotsLoading(false);
-		}
-	}, [showError]);
-	useEffect(() => {
-		if (user && user.token) {
-			fetchUsers();
-			fetchBots();
-		}
-	}, [fetchUsers, fetchBots, user]);
-
-	useEffect(() => {
-		if (socket) {
-			const handleNewMessage = (message) => {
-				console.log("Received new message:", message);
-				updateMessages((prevMessages) => {
-					if (!prevMessages.some((msg) => msg.id === message.id)) {
-						return [...prevMessages, message];
-					}
-					return prevMessages;
-				});
-			};
-
-			const handleInitialMessages = (initialMessages) => {
-				updateMessages(() => initialMessages.reverse());
-			};
-
-			const handleUserBanned = ({ userId, username }) => {
-				console.log(`User ${username} has been banned. Removing their messages.`);
-				updateMessages((prevMessages) =>
-					prevMessages.filter((msg) => msg.user._id !== userId)
-				);
-			};
-
-			const handleUserUnbanned = ({ userId, username }) => {
-				console.log(`User ${username} has been unbanned.`);
-				// Optionally, you can update the UI to reflect the unbanned status
-			};
-
-			socket.on("message", handleNewMessage);
-			socket.on("initialMessages", handleInitialMessages);
-			socket.on("userBanned", handleUserBanned);
-			socket.on("userUnbanned", handleUserUnbanned);
-			socket.on("userStatusUpdate", handleUserStatusUpdate);
-			socket.on("rateLimitError", handleRateLimitError);
-			socket.on("error", (error) => {
-				console.error("Socket error:", error);
-				showError(`Socket error: ${error.message}`);
-			});
-
-			socket.emit("getInitialMessages"); // Request initial messages
-
-			return () => {
-				console.log("Cleaning up socket listeners");
-				socket.off("message", handleNewMessage);
-				socket.off("initialMessages", handleInitialMessages);
-				socket.off("userBanned", handleUserBanned);
-				socket.off("userUnbanned", handleUserUnbanned);
-				socket.off("userStatusUpdate", handleUserStatusUpdate);
-				socket.off("rateLimitError", handleRateLimitError);
-				socket.off("error");
-			};
-		} else {
-		}
-	}, [socket, updateMessages, handleUserStatusUpdate, handleRateLimitError, showError]);
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -421,18 +274,6 @@ const ChatWindow = () => {
 			document.removeEventListener("click", handleClickOutside);
 		};
 	}, [selectedUser, closeProfileCard]);
-
-	useEffect(() => {
-		if (socket) {
-			socket.on("botTyping", ({ botName, isTyping }) => {
-				setTypingBots((prev) => ({ ...prev, [botName]: isTyping }));
-			});
-
-			return () => {
-				socket.off("botTyping");
-			};
-		}
-	}, [socket]);
 
 	useEffect(() => {
 		if (socket) {
@@ -459,10 +300,6 @@ const ChatWindow = () => {
 			};
 		}
 	}, [socket]);
-
-	if (!user) {
-		return <div>No user data available. Please try logging in again.</div>;
-	}
 
 	return (
 		<div className="chat-window">
@@ -502,7 +339,7 @@ const ChatWindow = () => {
 							}
 						}}
 						onSubmit={handleSendMessage}
-						users={allUsers}
+						users={users}
 						prefix={inputPrefix}
 					/>
 					<button type="submit">Send</button>
