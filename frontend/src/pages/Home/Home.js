@@ -1,5 +1,6 @@
 import React from "react";
 import HeaderImage from "../../images/header-image.png";
+import Sidebar from "../../components/Sidebar";
 
 const Home = () => {
 	return (
@@ -8,16 +9,13 @@ const Home = () => {
 				<img src={HeaderImage} alt="Header" className="header__image" />
 			</header>
 			<div className="main-content">
-				{/* <Sidebar
-					collapsed={sidebarCollapsed}
-					users={[]} // Pass your users data here
-					bots={[]} // Pass your bots data here
+				<Sidebar
 					onUserClick={() => {}} // Implement this function
 					onProfileClick={() => {}} // Implement this function
 					onlineUsers={[]} // Pass your online users data here
-					botsLoading={false} // Set this based on your bots loading state
+					collapsed={false}
 				/>
-				<button
+				{/* <button
 					className="toggle-button toggle-button--sidebar"
 					onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
 				>

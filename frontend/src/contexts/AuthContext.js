@@ -2,7 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import { useApp } from "./AppContext";
 import { auth } from "../lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { useWebSocket } from "./WebSocketContext";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -15,8 +16,9 @@ export const AuthProvider = ({ children }) => {
 			if (firebaseUser) {
 				try {
 					setLoading(true);
+					const token = await firebaseUser.getIdToken();
 					const response = await axiosInstance.get("/api/current_user");
-					setUser({ ...response.data });
+					setUser({ ...response.data, token });
 				} catch (err) {
 					if (err.response?.data.message) {
 						setError(err.response.data.message);
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 					},
 				}
 			);
-			setUser({ ...response.data });
+			setUser({ ...response.data, token });
 			setLoading(false);
 			setSuccess("Logged in successfully!");
 		} catch (err) {
@@ -76,7 +78,7 @@ export const AuthProvider = ({ children }) => {
 	const register = async (email, password, username) => {
 		try {
 			setLoading(true);
-			const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+			const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 			const token = await userCredential.user.getIdToken();
 			const response = await axiosInstance.post("/register", { email, username });
 			setUser({ ...response.data, token });
