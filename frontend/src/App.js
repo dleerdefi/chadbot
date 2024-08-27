@@ -11,7 +11,7 @@ const App = () => {
 
 	useEffect(() => {
 		if (error) {
-			console.log(error)
+			console.log(error);
 			toast.error(error);
 			setError(null);
 		}
@@ -25,10 +25,10 @@ const App = () => {
 	}, [success]);
 
 	return (
-		<>
-			<RouterProvider router={router} />;
+		<div className="app-container">
+			<RouterProvider router={router} />
 			<ToastContainer />
-		</>
+		</div>
 	);
 };
 

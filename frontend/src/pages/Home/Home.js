@@ -1,36 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import HeaderImage from "../../images/header-image.png";
-import Sidebar from "../../components/Sidebar";
+import Sidebar from "../../components/SideBar/Sidebar";
+import ChatWindow from "../../components/ChatWindow/ChatWindow";
+import "./Home.css"
 
 const Home = () => {
+	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 	return (
-		<div className="app-container">
+		<div className="home">
 			<header className="header">
 				<img src={HeaderImage} alt="Header" className="header__image" />
 			</header>
 			<div className="main-content">
 				<Sidebar
-					onUserClick={() => {}} // Implement this function
-					onProfileClick={() => {}} // Implement this function
-					onlineUsers={[]} // Pass your online users data here
-					collapsed={false}
+					onUserClick={() => {}}
+					onProfileClick={() => {}}
+					collapsed={sidebarCollapsed}
 				/>
 				{/* <button
 					className="toggle-button toggle-button--sidebar"
 					onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
 				>
 					{sidebarCollapsed ? ">" : "<"}
-				</button>
+				</button> */}
 
 				<ChatWindow />
-
-				<button
-					className="toggle-button toggle-button--userbar"
-					onClick={() => setUserBarCollapsed(!userBarCollapsed)}
-				>
-					{userBarCollapsed ? "<" : ">"}
-				</button>
-				<Account user={user} setUser={setUser} collapsed={userBarCollapsed} /> */}
+				{/* <Account user={user} setUser={setUser} collapsed={userBarCollapsed} /> */}
 			</div>
 		</div>
 	);

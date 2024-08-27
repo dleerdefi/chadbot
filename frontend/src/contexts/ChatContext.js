@@ -14,8 +14,6 @@ export const ChatProvider = ({ children }) => {
 	const { setError, setSuccess } = useApp();
 	const { onlineUsers } = useWebSocket();
 
-	console.log(bots, users);
-
 	useEffect(() => {
 		if (user) {
 			fetchUsers();

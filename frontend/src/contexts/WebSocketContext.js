@@ -16,7 +16,6 @@ export const WebSocketProvider = ({ children }) => {
 
 	useEffect(() => {
 		if (user && user.token) {
-			console.log("Attempting to connect WebSocket");
 			const newSocket = io(process.env.REACT_APP_API_URL || "http://localhost:3000", {
 				auth: { token: user.token },
 				query: { token: user.token },
@@ -25,7 +24,6 @@ export const WebSocketProvider = ({ children }) => {
 
 			newSocket.on("connect", () => {
 				setSocket(newSocket);
-				console.log("WebSocket connected successfully");
 			});
 
 			newSocket.on("connect_error", (error) => {
@@ -56,12 +54,10 @@ export const WebSocketProvider = ({ children }) => {
 	useEffect(() => {
 		if (socket) {
 			const handleInitialOnlineUsers = (initialOnlineUsers) => {
-				console.log("Received initial online users:", initialOnlineUsers);
 				setOnlineUsers(initialOnlineUsers);
 			};
 
 			const handleUserStatusUpdate = ({ userId, status }) => {
-				console.log(`User ${userId} status updated to ${status}`);
 				setOnlineUsers((prev) =>
 					status === "online"
 						? [...new Set([...prev, userId])]

@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import '../UserProfileCard.css';
+import './UserProfileCard.css';
 
 const UserProfileCard = memo(({ user, position, onClose }) => {
   const [cardPosition, setCardPosition] = useState(position);

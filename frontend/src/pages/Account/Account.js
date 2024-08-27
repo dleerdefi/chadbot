@@ -3,7 +3,7 @@ import axios from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
 import { auth } from "../../firebase";
-import "../AccountSection.css";
+import "../Account.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 

@@ -1,4 +1,5 @@
 import React from "react";
+import "./SearchBar"
 
 const SearchBar = React.memo(({ onChange }) => (
 	<input

@@ -1,0 +1,18 @@
+.chat-window {
+	flex: 1;
+	display: flex;
+}
+
+.main-chat {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.message-area {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1.25rem;
+	height: 62.25vh;
+	max-height: 62.25vh;
+}

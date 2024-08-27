@@ -1,0 +1,20 @@
+/* Additional styles for better visual hierarchy */
+.message strong {
+	font-weight: bold;
+	color: var(--color-accent);
+}
+
+.message-input button {
+	padding: 10px 20px;
+	background-color: var(--color-accent);
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	font-size: 16px;
+}
+
+.message-input button:hover {
+	background-color: var(--color-accent-hover);
+}

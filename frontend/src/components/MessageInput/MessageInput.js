@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../../contexts/WebSocketContext';
 
 const MessageInput = () => {
     const [message, setMessage] = useState('');

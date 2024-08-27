@@ -1,19 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { useWebSocket } from "../contexts/WebSocketContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useWebSocket } from "../../contexts/WebSocketContext";
 import axios from "axios";
-import moment from "moment";
-import Sidebar from "./Sidebar";
-import AccountSection from "../pages/Account/Account";
-import UserProfileCard from "./UserProfileCard";
-import AutocompleteInput from "./AutocompleteInput";
-import headerImage from "../images/header-image.png";
-import "../ChatWindow.css";
+import UserProfileCard from "../UserProfileCard/UserProfileCard";
+import AutocompleteInput from "../AutocompleteInput/AutocompleteInput";
+import "./ChatWindow.css";
+import Message from "../Message/Message";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 const ChatWindow = () => {
-	const { user, setUser } = useAuth();
+	const { user } = useAuth();
 	const { socket, sendMessage, messages, updateMessages } = useWebSocket();
 	const [allUsers, setAllUsers] = useState([]);
 	const [bots, setBots] = useState([]);
@@ -55,7 +52,6 @@ const ChatWindow = () => {
 	}, [messages, scrollToBottom]);
 
 	const handleUserStatusUpdate = useCallback(({ userId, status }) => {
-		console.log(`User ${userId} status updated to ${status}`);
 		setOnlineUsers((prevOnlineUsers) => {
 			if (status === "online" && !prevOnlineUsers.includes(userId)) {
 				return [...prevOnlineUsers, userId];
@@ -305,13 +301,11 @@ const ChatWindow = () => {
 	const fetchUsers = useCallback(async () => {
 		if (!user || !user.token) return;
 		try {
-			console.log("Fetching users...");
 			const response = await axios.get(`${API_URL}/api/all-users`, {
 				headers: {
 					Authorization: `Bearer ${user.token}`,
 				},
 			});
-			console.log("Users fetched:", JSON.stringify(response.data, null, 2));
 			const usersWithOnlineStatus = response.data.map((u) => ({
 				...u,
 				isOnline: u.isBot || onlineUsers.includes(u._id),
@@ -330,9 +324,7 @@ const ChatWindow = () => {
 	const fetchBots = useCallback(async () => {
 		setBotsLoading(true);
 		try {
-			console.log("Fetching bots...");
 			const response = await axios.get(`${API_URL}/api/bots`);
-			console.log("Bots fetched:", JSON.stringify(response.data, null, 2));
 			const botsWithOnlineStatus = response.data.map((bot) => ({
 				...bot,
 				isBot: true,
@@ -364,8 +356,6 @@ const ChatWindow = () => {
 
 	useEffect(() => {
 		if (socket) {
-			console.log("Socket connected in ChatWindow");
-
 			const handleNewMessage = (message) => {
 				console.log("Received new message:", message);
 				updateMessages((prevMessages) => {
@@ -377,7 +367,6 @@ const ChatWindow = () => {
 			};
 
 			const handleInitialMessages = (initialMessages) => {
-				console.log("Received initial messages:", initialMessages);
 				updateMessages(() => initialMessages.reverse());
 			};
 
@@ -417,7 +406,6 @@ const ChatWindow = () => {
 				socket.off("error");
 			};
 		} else {
-			console.log("No socket connection in ChatWindow");
 		}
 	}, [socket, updateMessages, handleUserStatusUpdate, handleRateLimitError, showError]);
 
@@ -449,12 +437,10 @@ const ChatWindow = () => {
 	useEffect(() => {
 		if (socket) {
 			const handleInitialOnlineUsers = (initialOnlineUsers) => {
-				console.log("Received initial online users:", initialOnlineUsers);
 				setOnlineUsers(initialOnlineUsers);
 			};
 
 			const handleUserStatusUpdate = ({ userId, status }) => {
-				console.log(`User ${userId} status updated to ${status}`);
 				setOnlineUsers((prev) =>
 					status === "online"
 						? [...new Set([...prev, userId])]
@@ -473,109 +459,54 @@ const ChatWindow = () => {
 			};
 		}
 	}, [socket]);
-	const Message = useMemo(
-		() =>
-			React.memo(({ message }) => (
-				<div key={message.id || message._id} className="message">
-					<img
-						src={
-							message.user && message.user.profilePic
-								? `${API_URL}${message.user.profilePic}`
-								: "/default-avatar.png"
-						}
-						alt="Profile"
-						className="profile-pic clickable"
-						onClick={(event) =>
-							message.user && handleUserClick(message.user, true, event)
-						}
-					/>
-					<div className="message-content">
-						<strong
-							className="clickable"
-							onClick={(event) =>
-								message.user && handleUserClick(message.user, false, event)
-							}
-						>
-							{message.user ? message.user.name : "Unknown User"}
-						</strong>
-						: {message.text} {/* Add this line to display the message text */}
-						<span className="timestamp">
-							{moment(message.createdAt).format("MMMM Do YYYY, h:mm:ss a")}
-						</span>
-						{user.isAdmin && message.user && message.user._id !== user._id && (
-							<div className="admin-controls">
-								<button onClick={() => handleDeleteMessage(message.id)}>
-									Delete
-								</button>
-								{message.user.isBanned ? (
-									<button onClick={() => handleUnbanUser(message.user._id)}>
-										Unban User
-									</button>
-								) : (
-									<button onClick={() => handleBanByUsername(message.user.name)}>
-										Ban User
-									</button>
-								)}
-							</div>
-						)}
-					</div>
-				</div>
-			)),
-		[handleUserClick, user, handleDeleteMessage, handleUnbanUser, handleBanByUsername]
-	);
+
 	if (!user) {
 		return <div>No user data available. Please try logging in again.</div>;
 	}
 
 	return (
-		<div className="chat-window-container">
-			<div className="header-image" style={{ backgroundImage: `url(${headerImage})` }}></div>
-			<div className="chat-window">
-				<Sidebar
-					users={allUsers}
-					bots={bots}
-					onUserClick={handleUserClick}
-					onBotClick={handleBotClick}
-					onProfileClick={(user) => setSelectedUser(user)}
-					onlineUsers={onlineUsers}
-					botsLoading={botsLoading}
-				/>
-				<div className="main-chat">
-					<h1>Chat with the greatest Pickup Artists of all time</h1>
-					{error && <div style={{ color: "red" }}>{error}</div>}
-					<div className="message-area">
-						{messages.map((message) => (
-							<Message key={message.id || message._id} message={message} />
-						))}
-						{Object.entries(typingBots).map(
-							([botName, isTyping]) =>
-								isTyping && (
-									<div key={botName} className="typing-indicator">
-										{botName} is typing...
-									</div>
-								)
-						)}
-						<div ref={messagesEndRef} />
-					</div>
-					<form onSubmit={handleSendMessage} className="message-input">
-						<AutocompleteInput
-							value={inputPrefix + input}
-							onChange={(newValue) => {
-								if (newValue.startsWith(inputPrefix)) {
-									setInput(newValue.slice(inputPrefix.length));
-								} else {
-									setInput(newValue);
-									setInputPrefix("");
-								}
-							}}
-							onSubmit={handleSendMessage}
-							users={allUsers}
-							prefix={inputPrefix}
+		<div className="chat-window">
+			<div className="main-chat">
+				<h1>Chat with the greatest Pickup Artists of all time</h1>
+				<div className="message-area">
+					{messages.map((message) => (
+						<Message
+							handleUnbanUser={handleUnbanUser}
+							handleBanByUsername={handleBanByUsername}
+							handleDeleteMessage={handleDeleteMessage}
+							handleUserClick={handleUserClick}
+							user={user}
+							key={message.id || message._id}
+							message={message}
 						/>
-						<button type="submit">Send</button>
-					</form>
+					))}
+					{Object.entries(typingBots).map(
+						([botName, isTyping]) =>
+							isTyping && (
+								<div key={botName} className="typing-indicator">
+									{botName} is typing...
+								</div>
+							)
+					)}
+					<div ref={messagesEndRef} />
 				</div>
-				<AccountSection user={user} setUser={setUser} />
+				<form onSubmit={handleSendMessage} className="message-input">
+					<AutocompleteInput
+						value={inputPrefix + input}
+						onChange={(newValue) => {
+							if (newValue.startsWith(inputPrefix)) {
+								setInput(newValue.slice(inputPrefix.length));
+							} else {
+								setInput(newValue);
+								setInputPrefix("");
+							}
+						}}
+						onSubmit={handleSendMessage}
+						users={allUsers}
+						prefix={inputPrefix}
+					/>
+					<button type="submit">Send</button>
+				</form>
 			</div>
 			{selectedUser && (
 				<UserProfileCard

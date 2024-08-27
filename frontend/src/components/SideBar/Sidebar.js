@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
-import { useWebSocket } from "../contexts/WebSocketContext";
-import UserList from "./UserList/UserList";
-import SearchBar from "./SearchBar/SearchBar";
+import { useWebSocket } from "../../contexts/WebSocketContext";
+import UserList from "../UserList/UserList";
+import SearchBar from "../SearchBar/SearchBar";
+import { useChat } from "../../contexts/ChatContext";
 import "./Sidebar.css";
-import { useChat } from "../contexts/ChatContext";
 
 const Sidebar = ({ onUserClick = () => {}, onProfileClick = () => {}, collapsed = false }) => {
 	const [searchTerm, setSearchTerm] = useState("");
