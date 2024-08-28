@@ -21,16 +21,16 @@ const ChatWindow = () => {
 		setOnlineUsers,
 		typingBots,
 		users,
+		inputPrefix,
+		setInputPrefix,
+		selectedUser,
+		setSelectedUser,
+		cardPosition,
+		handleUserClick,
 	} = useWebSocket();
 	const [input, setInput] = useState("");
-	const [selectedUser, setSelectedUser] = useState(null);
-	const [cardPosition, setCardPosition] = useState({
-		top: "50%",
-		left: "50%",
-		transform: "translate(-50%, -50%)",
-	});
+
 	const messagesEndRef = useRef(null);
-	const [inputPrefix, setInputPrefix] = useState("");
 
 	const sanitizeInput = useCallback((input) => {
 		return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -57,12 +57,11 @@ const ChatWindow = () => {
 						},
 					}
 				);
-				console.log("Ban response:", response.data);
+
 				if (response.data.success) {
 					setError(
 						`User ${username} has been banned successfully and their messages have been removed.`
 					);
-					// The messages will be removed by the 'userBanned' socket event
 				} else {
 					setError(response.data.message);
 				}
@@ -187,16 +186,14 @@ const ChatWindow = () => {
 			}
 
 			try {
-				console.log("Attempting to send message");
 				sendMessage({
-					text: inputPrefix + sanitizedInput, // Include the prefix in the sent message
+					text: inputPrefix + sanitizedInput,
 					userId: user._id,
 					room: "general",
 				});
 				setInput("");
 				setInputPrefix("");
-			} catch (err) {
-			}
+			} catch (err) {}
 		},
 		[
 			input,
@@ -210,29 +207,6 @@ const ChatWindow = () => {
 			sendMessage,
 		]
 	);
-	const handleUserClick = useCallback((clickedUser, showProfile, event) => {
-		if (event) {
-			event.preventDefault();
-			event.stopPropagation();
-		}
-		if (showProfile) {
-			setSelectedUser(clickedUser);
-			const newPosition = {
-				top: `${event.clientY}px`,
-				left: `${event.clientX}px`,
-				transform: "translate(-50%, -50%)",
-			};
-			setCardPosition(newPosition);
-			console.log("UserProfileCard position set to:", newPosition);
-		} else {
-			setInputPrefix(`@${clickedUser.username || clickedUser.name} `);
-		}
-	}, []);
-
-	const handleBotClick = useCallback((bot) => {
-		console.log("Bot clicked:", bot);
-		setInputPrefix(`@${bot.name} `);
-	}, []);
 
 	const closeProfileCard = useCallback(() => {
 		setSelectedUser(null);

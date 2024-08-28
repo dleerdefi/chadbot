@@ -4,9 +4,9 @@ import UserList from "../UserList/UserList";
 import SearchBar from "../SearchBar/SearchBar";
 import "./Sidebar.css";
 
-const Sidebar = ({ onUserClick = () => {}, onProfileClick = () => {}, collapsed = false }) => {
+const Sidebar = ({ collapsed = false }) => {
 	const [searchTerm, setSearchTerm] = useState("");
-	const { onlineUsers, bots, users, isBotLoading  } = useWebSocket();
+	const { onlineUsers, bots, users, isBotLoading } = useWebSocket();
 
 	const filteredUsers = useMemo(() => {
 		const userMap = new Map();
@@ -50,7 +50,6 @@ const Sidebar = ({ onUserClick = () => {}, onProfileClick = () => {}, collapsed 
 		return filteredAndSortedUsers;
 	}, [users, bots, searchTerm, onlineUsers]);
 
-
 	return (
 		<div className={`sidebar ${collapsed ? "sidebar--collapsed" : ""}`}>
 			{!collapsed && (
@@ -59,11 +58,7 @@ const Sidebar = ({ onUserClick = () => {}, onProfileClick = () => {}, collapsed 
 					{isBotLoading ? (
 						<div className="loading-state">Loading bots...</div>
 					) : (
-						<UserList
-							users={filteredUsers}
-							onUserClick={onUserClick}
-							onProfileClick={onProfileClick}
-						/>
+						<UserList users={filteredUsers} />
 					)}
 				</>
 			)}

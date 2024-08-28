@@ -16,6 +16,13 @@ export const WebSocketProvider = ({ children }) => {
 	const [bots, setBots] = useState([]);
 	const [isBotLoading, setIsBotLoading] = useState(true);
 	const [typingBots, setTypingBots] = useState({});
+	const [inputPrefix, setInputPrefix] = useState("");
+	const [selectedUser, setSelectedUser] = useState(null);
+	const [cardPosition, setCardPosition] = useState({
+		top: "50%",
+		left: "50%",
+		transform: "translate(-50%, -50%)",
+	});
 	const { user } = useAuth();
 	const { setError, setSuccess } = useApp();
 
@@ -104,6 +111,24 @@ export const WebSocketProvider = ({ children }) => {
 		},
 		[setError]
 	);
+
+	const handleUserClick = useCallback((clickedUser, showProfile, event) => {
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		if (showProfile) {
+			setSelectedUser(clickedUser);
+			const newPosition = {
+				top: `${event.clientY}px`,
+				left: `${event.clientX}px`,
+				transform: "translate(-50%, -50%)",
+			};
+			setCardPosition(newPosition);
+		} else {
+			setInputPrefix(`@${clickedUser.username || clickedUser.name} `);
+		}
+	}, []);
 
 	useEffect(() => {
 		if (user) {
@@ -251,6 +276,13 @@ export const WebSocketProvider = ({ children }) => {
 		isBotLoading,
 		typingBots,
 		setUsers,
+		inputPrefix,
+		setInputPrefix,
+		selectedUser,
+		setSelectedUser,
+		cardPosition,
+		setCardPosition,
+		handleUserClick,
 	};
 
 	return <WebSocketContext.Provider value={contextValue}>{children}</WebSocketContext.Provider>;

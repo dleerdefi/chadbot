@@ -14,9 +14,8 @@ const Home = () => {
 			</header>
 			<div className="main-content">
 				<Sidebar
-					onUserClick={() => {}}
-					onProfileClick={() => {}}
 					collapsed={sidebarCollapsed}
+
 				/>
 				{/* <button
 					className="toggle-button toggle-button--sidebar"

@@ -1,7 +1,10 @@
 import React from "react";
 import "./UserList.css";
+import { useWebSocket } from "../../contexts/WebSocketContext";
 
-const UserList = ({ users, onUserClick, onProfileClick }) => {
+const UserList = ({ users }) => {
+	const { handleUserClick } = useWebSocket();
+
 	return (
 		<div className="users-section" role="region" aria-labelledby="users-heading">
 			<h3 id="users-heading">Users and Bots</h3>
@@ -16,12 +19,14 @@ const UserList = ({ users, onUserClick, onProfileClick }) => {
 								src={user.profilePicture || "/default-avatar.png"}
 								alt={`${user.username}'s avatar`}
 								className="user-avatar clickable"
-								onClick={() => onProfileClick(user)}
+								onClick={(event) => handleUserClick(user, true, event)}
 							/>
 							<span
 								className="username clickable"
-								onClick={() => onUserClick(user)}
-								onKeyDown={(e) => e.key === "Enter" && onUserClick(user)}
+								onClick={(event) => handleUserClick(user, false, event)}
+								onKeyDown={(event) =>
+									event.key === "Enter" && handleUserClick(user, false, event)
+								}
 								role="button"
 								tabIndex="0"
 							>
