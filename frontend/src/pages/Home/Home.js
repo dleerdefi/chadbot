@@ -3,6 +3,7 @@ import HeaderImage from "../../images/header-image.png";
 import Sidebar from "../../components/SideBar/Sidebar";
 import ChatWindow from "../../components/ChatWindow/ChatWindow";
 import "./Home.css";
+import Account from "../../components/Account/Account";
 
 const Home = () => {
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -13,10 +14,7 @@ const Home = () => {
 				<img src={HeaderImage} alt="Header" className="header__image" />
 			</header>
 			<div className="main-content">
-				<Sidebar
-					collapsed={sidebarCollapsed}
-
-				/>
+				<Sidebar collapsed={sidebarCollapsed} />
 				{/* <button
 					className="toggle-button toggle-button--sidebar"
 					onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -25,7 +23,7 @@ const Home = () => {
 				</button> */}
 
 				<ChatWindow />
-				{/* <Account user={user} setUser={setUser} collapsed={userBarCollapsed} /> */}
+				<Account collapsed={sidebarCollapsed} />
 			</div>
 		</div>
 	);

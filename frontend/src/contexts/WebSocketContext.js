@@ -82,6 +82,16 @@ export const WebSocketProvider = ({ children }) => {
 		[socket]
 	);
 
+	const updateMessagesUser = (updatedUser) => {
+		setMessages((prevMessages) =>
+			prevMessages.map((message) =>
+				message.user._id === updatedUser._id
+					? { ...message, user: { ...message.user, ...updatedUser } }
+					: message
+			)
+		);
+	};
+
 	const handleUserStatusUpdate = useCallback(
 		({ userId, status }) => {
 			let updatedOnlineUsers = [...onlineUsers];
@@ -167,19 +177,16 @@ export const WebSocketProvider = ({ children }) => {
 
 			newSocket.on("disconnect", (reason) => {
 				console.log(`WebSocket disconnected: ${reason}`);
-				setError(`Chat is offline now`);
 				setSocket(null);
 			});
 
 			newSocket.on("message", (message) => {
 				setMessages((prevMessages) => [...prevMessages, message]);
-				setSuccess("New incoming message");
 			});
 
 			return () => {
 				if (newSocket) {
 					console.log("Cleaning up WebSocket connection");
-					setError(`Chat is offline now`);
 					newSocket.disconnect();
 				}
 			};
@@ -248,7 +255,7 @@ export const WebSocketProvider = ({ children }) => {
 				setError(`Socket error: ${error.message}`);
 			});
 
-			socket.emit("getInitialMessages"); // Request initial messages
+			socket.emit("getInitialMessages");
 
 			return () => {
 				console.log("Cleaning up socket listeners");
@@ -283,6 +290,7 @@ export const WebSocketProvider = ({ children }) => {
 		cardPosition,
 		setCardPosition,
 		handleUserClick,
+		updateMessagesUser,
 	};
 
 	return <WebSocketContext.Provider value={contextValue}>{children}</WebSocketContext.Provider>;

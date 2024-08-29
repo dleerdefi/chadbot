@@ -1,29 +1,31 @@
 import React, { useState } from "react";
-import axios from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
-import { auth } from "../../firebase";
-import "../Account.css";
+import "./Account.css";
+import { useAuth } from "../../contexts/AuthContext";
+import axiosInstance from "../../utils/axiosInstance";
+import { auth } from "../../lib/firebase";
+import { useApp } from "../../contexts/AppContext";
+import { useWebSocket } from "../../contexts/WebSocketContext";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-const Account = ({ user, setUser, collapsed }) => {
+const Account = ({ collapsed }) => {
+	const { user, setUser } = useAuth();
+	const { updateMessagesUser } = useWebSocket();
 	const [username, setUsername] = useState(user.username || "");
 	const [bio, setBio] = useState(user.bio || "");
-	const [profilePic, setProfilePic] = useState(user.profilePic || "");
-	const [error, setError] = useState("");
-	const [success, setSuccess] = useState("");
+	const { setSuccess, setError } = useApp();
 	const navigate = useNavigate();
 
 	const updateProfile = async () => {
 		try {
-			const response = await axios.post("/api/update-profile", { username, bio });
+			const response = await axiosInstance.post("/api/update-profile", { username, bio });
 			setUser(response.data.user);
+			updateMessagesUser(response.data.user);
 			setSuccess("Profile updated successfully");
-			setError("");
 		} catch (error) {
 			setError("Failed to update profile: " + (error.response?.data?.error || error.message));
-			setSuccess("");
 		}
 	};
 
@@ -33,25 +35,20 @@ const Account = ({ user, setUser, collapsed }) => {
 		formData.append("profilePic", file);
 
 		try {
-			const firebaseUser = getAuth().currentUser;
-			const idToken = await firebaseUser.getIdToken(true);
-			const response = await axios.post(`${API_URL}/api/upload-profile-pic`, formData, {
+			const response = await axiosInstance.post(`/api/upload-profile-pic`, formData, {
 				headers: {
 					"Content-Type": "multipart/form-data",
-					Authorization: `Bearer ${idToken}`,
 				},
 			});
-			const fullProfilePicUrl = `${API_URL}${response.data.profilePicUrl}`;
-			setProfilePic(fullProfilePicUrl);
-			setUser({ ...user, profilePic: fullProfilePicUrl });
+
+			setUser(response.data.user);
+			updateMessagesUser(response.data.user);
 			setSuccess("Profile picture uploaded successfully");
-			setError("");
 		} catch (error) {
 			setError(
 				"Failed to upload profile picture: " +
 					(error.response?.data?.error || error.message)
 			);
-			setSuccess("");
 		}
 	};
 
@@ -72,11 +69,7 @@ const Account = ({ user, setUser, collapsed }) => {
 			)
 		) {
 			try {
-				const firebaseUser = getAuth().currentUser;
-				const idToken = await firebaseUser.getIdToken(true);
-				await axios.delete(`${API_URL}/api/delete-account`, {
-					headers: { Authorization: `Bearer ${idToken}` },
-				});
+				await axiosInstance.delete(`/api/delete-account`);
 				await handleLogout();
 			} catch (error) {
 				setError("Failed to delete account. Please try again.");
@@ -84,12 +77,14 @@ const Account = ({ user, setUser, collapsed }) => {
 		}
 	};
 
-	const fullProfilePicUrl = profilePic ? `${API_URL}${profilePic}` : "/default-avatar.png";
-
 	if (collapsed) {
 		return (
 			<div className="account-section account-section--collapsed">
-				<img src={fullProfilePicUrl} alt="Profile" className="account-section__avatar" />
+				<img
+					src={`${API_URL}${user.profilePic}`}
+					alt="Profile"
+					className="account-section__avatar"
+				/>
 			</div>
 		);
 	}
@@ -97,7 +92,11 @@ const Account = ({ user, setUser, collapsed }) => {
 	return (
 		<div className="account-section">
 			<h3 className="account-section__title">Account</h3>
-			<img src={fullProfilePicUrl} alt="Profile" className="account-section__avatar" />
+			<img
+				src={`${API_URL}${user.profilePic}`}
+				alt="Profile"
+				className="account-section__avatar"
+			/>
 			<input
 				type="file"
 				onChange={handleFileUpload}
@@ -128,8 +127,6 @@ const Account = ({ user, setUser, collapsed }) => {
 			<button onClick={updateProfile} className="account-section__button">
 				Update Profile
 			</button>
-			{error && <p className="account-section__error">{error}</p>}
-			{success && <p className="account-section__success">{success}</p>}
 			<button
 				onClick={handleLogout}
 				className="account-section__button account-section__button--logout"

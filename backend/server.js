@@ -55,45 +55,45 @@ const maxRequestsPerDay = 10; // Define the limit here
 
 app.use(
 	cors({
-	  origin: FRONTEND_URL || "http://localhost:5000",
-	  credentials: true,
+		origin: FRONTEND_URL || "http://localhost:5000",
+		credentials: true,
 	})
-  );
-  
-  app.use(express.json());
-  app.use(express.static(path.join(__dirname, "../frontend/build")));
-  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-  
-  app.use((req, res, next) => {
+);
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use((req, res, next) => {
 	res.setHeader(
-	  "Content-Security-Policy",
-	  "default-src 'self'; " +
-	  "script-src 'self' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com; " +
-	  "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com; " +
-	  "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com; " +
-	  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-	  "font-src 'self' https://fonts.gstatic.com; " +
-	  "img-src 'self' data: https://*.googleapis.com; " +
-	  "object-src 'none';"
+		"Content-Security-Policy",
+		"default-src 'self'; " +
+			"script-src 'self' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com; " +
+			"frame-src 'self' https://accounts.google.com https://*.firebaseapp.com; " +
+			"connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com; " +
+			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+			"font-src 'self' https://fonts.gstatic.com; " +
+			"img-src 'self' data: https://*.googleapis.com; " +
+			"object-src 'none';"
 	);
-	
-	res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
-	
+
+	res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
+
 	next();
-  });
-  
-  app.use(
+});
+
+app.use(
 	session({
-	  secret: process.env.JWT_SECRET,
-	  resave: false,
-	  saveUninitialized: true,
-	  cookie: {
-		secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-		httpOnly: true, // Mitigate XSS attacks
-		sameSite: 'lax' // CSRF protection
-	  }
+		secret: process.env.JWT_SECRET,
+		resave: false,
+		saveUninitialized: true,
+		cookie: {
+			secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+			httpOnly: true, // Mitigate XSS attacks
+			sameSite: "lax", // CSRF protection
+		},
 	})
-  );
+);
 
 const globalMessageCache = [];
 const MAX_GLOBAL_MESSAGES = 50;
@@ -242,18 +242,12 @@ io.on("connection", (socket) => {
 			const messages = await Message.find()
 				.sort({ createdAt: -1 })
 				.limit(50)
-				.populate("user", "username profilePic");
+				.populate("user");
 
 			const formattedMessages = messages.map((message) => ({
 				id: message._id.toString(),
 				text: message.text,
-				user: message.user
-					? {
-							_id: message.user._id.toString(),
-							name: message.user.username,
-							profilePic: message.user.profilePic,
-					  }
-					: null,
+				user: message.user ? message.user : null,
 				createdAt: message.createdAt,
 			}));
 
@@ -299,11 +293,7 @@ io.on("connection", (socket) => {
 			const formattedMessage = {
 				id: message._id.toString(),
 				text: message.text,
-				user: {
-					_id: user._id.toString(),
-					name: user.username,
-					profilePic: user.profilePic,
-				},
+				user,
 				createdAt: message.createdAt,
 				room: message.room,
 			};
@@ -373,12 +363,7 @@ io.on("connection", (socket) => {
 							const formattedBotMessage = {
 								id: botMessage._id.toString(),
 								text: botMessage.text,
-								user: {
-									_id: botUser._id.toString(),
-									name: botUser.username,
-									profilePic: "/default-bot-avatar.png",
-									isBot: true,
-								},
+								user: botUser,
 								createdAt: botMessage.createdAt,
 								room: botMessage.room,
 							};
@@ -755,7 +740,7 @@ app.post(
 			if (user) {
 				res.json({
 					message: "Profile picture uploaded successfully",
-					profilePicUrl: user.profilePic,
+					user,
 				});
 			} else {
 				res.status(404).json({ error: "User not found" });
@@ -870,11 +855,7 @@ app.post("/api/messages", authenticateFirebaseToken, async (req, res) => {
 		io.emit("message", {
 			id: message._id,
 			text: message.text,
-			user: {
-				_id: req.user._id,
-				name: req.user.username,
-				profilePic: req.user.profilePic,
-			},
+			user,
 			createdAt: message.createdAt,
 			room: message.room,
 		});

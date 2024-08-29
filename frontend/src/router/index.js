@@ -4,7 +4,6 @@ import Home from "../pages/Home/Home";
 import Login from "../pages/Login/Login";
 // import Register from "../pages/Register/Register";
 // import ResetPassword from "../pages/ResetPassword/ResetPassword";
-// import Account from "../pages/Account/Account";
 
 const router = createBrowserRouter([
 	{
@@ -23,10 +22,6 @@ const router = createBrowserRouter([
 		path: "/",
 		element: <PrivateRoute component={Home} />,
 	},
-	// {
-	// 	path: "/account",
-	// 	element: <PrivateRoute component={Account} />,
-	// },
 ]);
 
 export default router;
