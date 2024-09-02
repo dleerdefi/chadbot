@@ -8,7 +8,6 @@ backend/.env
 .env.test.local
 .env.production.local
 frontend/build
-backend/uploads
 
 
 # Firebase
