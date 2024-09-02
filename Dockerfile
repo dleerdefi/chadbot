@@ -14,6 +14,7 @@ COPY backend/package.json ./backend/
 RUN cd backend && npm install
 
 COPY backend/ ./backend/
+RUN mkdir -p /app/backend/uploads
 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
