@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import router from "./router";
-import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
 import { useApp } from "./contexts/AppContext";
 import { ToastContainer, toast } from "react-toastify";
@@ -25,7 +24,7 @@ const App = () => {
 	}, [success]);
 
 	return (
-		<div className="app-container">
+		<div className="h-screen max-h-screen min-h-screen w-full bg-primary text-textPrimary">
 			<RouterProvider router={router} />
 			<ToastContainer />
 		</div>

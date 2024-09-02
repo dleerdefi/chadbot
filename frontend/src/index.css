@@ -1,149 +1,106 @@
-:root {
-	--color-bg-primary: #1e1e1e;
-	--color-bg-secondary: #2c2c2c;
-	--color-text-primary: #33ff00;
-	--color-text-secondary: #cccccc;
-	--color-border: #33ff00;
-	--color-focus-shadow: rgba(51, 255, 0, 0.5);
-	--font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-		"Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-	--font-family-mono: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
-	--transition-default: 0.3s ease;
-	--spacing-unit: 0.5rem;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
+@layer base {
+	:root {
+		/* Background Colors */
+		--color-bg-primary: #1e1e1e;
+		--color-bg-secondary: #2c2c2c;
+		--color-bg-card: #2c2c2c;
+		--color-bg-message: #444;
+		--color-bg-input: #444;
+		--color-bg-account: #333;
 
-html {
-	font-size: 16px;
-	line-height: 1.5;
-	-webkit-text-size-adjust: 100%;
-}
+		/* Text Colors */
+		--color-text-primary: #33ff00;
+		--color-text-secondary: #cccccc;
+		--color-text: #33ff00;
+		--color-timestamp: #888;
+		--color-admin: #ffd700;
 
-html,
-body,
-#root {
-	height: 100%;
-}
+		/* Accent Colors */
+		--color-accent: #007bff;
+		--color-accent-hover: #0056b3;
 
-body {
-	margin: 0;
-	font-family: var(--font-family-sans);
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	background-color: var(--color-bg-primary);
-	color: var(--color-text-primary);
-}
+		/* Utility Colors */
+		--color-success: #28a745;
+		--color-danger: #d31b1b;
+		--color-error: #f3673d;
 
-code {
-	font-family: var(--font-family-mono);
-}
+		/* Borders and Shadows */
+		--color-border: #33ff00;
+		--color-focus-shadow: rgba(51, 255, 0, 0.5);
+		--color-shadow: rgba(51, 255, 0, 0.3);
+		--shadow-default: 0 1px 2px rgba(0, 0, 0, 0.1);
 
-a {
-	color: var(--color-text-primary);
-	text-decoration: none;
-	transition: color var(--transition-default);
-}
+		/* Font Families */
+		--font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+			"Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+		--font-family-mono: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 
-a:hover,
-a:focus {
-	text-decoration: underline;
-}
+		/* Sizes and Spacing */
+		--header-height: 200px;
+		--sidebar-width: 250px;
+		--userbar-width: 250px;
+		--collapsed-width: 0px;
+		--account-width: 250px;
+		--account-width-collapsed: 60px;
+		--avatar-size: 100px;
+		--spacing-unit: 0.5rem;
 
-button {
-	cursor: pointer;
-	font-family: inherit;
-	font-size: inherit;
-	line-height: inherit;
-}
-
-input,
-textarea {
-	background-color: var(--color-bg-secondary);
-	border: 1px solid var(--color-border);
-	color: var(--color-text-primary);
-	padding: var(--spacing-unit);
-	font-size: 1rem;
-	font-family: inherit;
-	transition: box-shadow var(--transition-default);
-}
-
-input:focus,
-textarea:focus {
-	outline: none;
-	box-shadow: 0 0 0 2px var(--color-focus-shadow);
-}
-
-/* Utility Classes */
-.text-center {
-	text-align: center;
-}
-.mt-1 {
-	margin-top: calc(var(--spacing-unit) * 1);
-}
-.mt-2 {
-	margin-top: calc(var(--spacing-unit) * 2);
-}
-.mb-1 {
-	margin-bottom: calc(var(--spacing-unit) * 1);
-}
-.mb-2 {
-	margin-bottom: calc(var(--spacing-unit) * 2);
-}
-
-/* Animations */
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
-
-@keyframes slideIn {
-	from {
-		transform: translateY(-10px);
-		opacity: 0;
-	}
-	to {
-		transform: translateY(0);
-		opacity: 1;
-	}
-}
-
-/* Responsive Typography */
-@media (max-width: 768px) {
-	html {
-		font-size: 14px;
-	}
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	*::after {
-		animation-duration: 0.01ms !important;
-		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
-		scroll-behavior: auto !important;
-	}
-}
-
-/* Print Styles */
-@media print {
-	body {
-		background-color: white;
-		color: black;
+		/* Borders, Radius, and Transitions */
+		--border-radius: 4px;
+		--transition-default: 0.3s ease;
+		--z-index-card: 1000;
 	}
 
-	a {
-		color: black;
-		text-decoration: underline;
+	.scrollbar-hidden {
+		overflow: -moz-scrollbars-none; /* Firefox */
+		scrollbar-width: none; /* Firefox */
+	}
+
+	.scrollbar-hidden::-webkit-scrollbar {
+		display: none; /* Safari and Chrome */
+	}
+
+	/* Typing dots animation */
+	.typing-indicator {
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.typing-indicator span {
+		width: 4px;
+		height: 4px;
+		margin: 0 2px;
+		background-color: #6b7280; /* Tailwind CSS gray-500 */
+		border-radius: 50%;
+		animation: typing 1.5s infinite steps(3, end);
+	}
+
+	.typing-indicator span:nth-child(1) {
+		animation-delay: 0.3s;
+	}
+
+	.typing-indicator span:nth-child(2) {
+		animation-delay: 0.6s;
+	}
+
+	.typing-indicator span:nth-child(3) {
+		animation-delay: 0.9s;
+	}
+
+	@keyframes typing {
+		0%,
+		20% {
+			opacity: 0;
+		}
+		40% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
 	}
 }

@@ -18,11 +18,7 @@ export const WebSocketProvider = ({ children }) => {
 	const [typingBots, setTypingBots] = useState({});
 	const [inputPrefix, setInputPrefix] = useState("");
 	const [selectedUser, setSelectedUser] = useState(null);
-	const [cardPosition, setCardPosition] = useState({
-		top: "50%",
-		left: "50%",
-		transform: "translate(-50%, -50%)",
-	});
+	const [cardPosition, setCardPosition] = useState(null);
 	const { user } = useAuth();
 	const { setError, setSuccess } = useApp();
 
@@ -127,14 +123,39 @@ export const WebSocketProvider = ({ children }) => {
 			event.preventDefault();
 			event.stopPropagation();
 		}
+
 		if (showProfile) {
+			const cardWidth = 320; // Adjust this based on your card width
+			const cardHeight = 200; // Adjust this based on your card height
+
+			let newTop = event.clientY + 10; // Adjust vertical offset
+			let newLeft = event.clientX + 10; // Adjust horizontal offset
+
+			// Adjust position based on viewport bounds
+			if (newLeft + cardWidth > window.innerWidth) {
+				newLeft = event.clientX - cardWidth - 10; // Position to the left of the click
+			}
+
+			if (newTop + cardHeight > window.innerHeight) {
+				newTop = event.clientY - cardHeight - 10; // Position above the click
+			}
+
+			// Fine-tune position for more visibility
+			if (newLeft < 0) {
+				newLeft = 10; // Margin from the left edge
+			}
+
+			if (newTop < 0) {
+				newTop = 10; // Margin from the top edge
+			}
+
+			setCardPosition({
+				top: `${newTop}px`,
+				left: `${newLeft}px`,
+				transform: "translate(0, 0)", // Adjust if needed
+			});
+
 			setSelectedUser(clickedUser);
-			const newPosition = {
-				top: `${event.clientY}px`,
-				left: `${event.clientX}px`,
-				transform: "translate(-50%, -50%)",
-			};
-			setCardPosition(newPosition);
 		} else {
 			setInputPrefix(`@${clickedUser.username || clickedUser.name} `);
 		}

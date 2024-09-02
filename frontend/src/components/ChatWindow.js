@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import { useWebSocket } from "../../contexts/WebSocketContext";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useWebSocket } from "../contexts/WebSocketContext";
 import axios from "axios";
-import UserProfileCard from "../UserProfileCard/UserProfileCard";
-import AutocompleteInput from "../AutocompleteInput/AutocompleteInput";
-import Message from "../Message/Message";
-import "./ChatWindow.css";
-import { useApp } from "../../contexts/AppContext";
+import AutocompleteInput from "./AutocompleteInput";
+import Message from "./Message";
+import { useApp } from "../contexts/AppContext";
+import axiosInstance from "../utils/axiosInstance";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -25,7 +24,6 @@ const ChatWindow = () => {
 		setInputPrefix,
 		selectedUser,
 		setSelectedUser,
-		cardPosition,
 		handleUserClick,
 	} = useWebSocket();
 	const [input, setInput] = useState("");
@@ -42,7 +40,7 @@ const ChatWindow = () => {
 
 	useEffect(() => {
 		scrollToBottom();
-	}, [messages, scrollToBottom]);
+	}, [messages, scrollToBottom, typingBots]);
 
 	const handleBanByUsername = useCallback(
 		async (username) => {
@@ -79,19 +77,13 @@ const ChatWindow = () => {
 		},
 		[user, setError]
 	);
+
 	const handleUnbanByUsername = useCallback(
 		async (username) => {
 			try {
-				const response = await axios.post(
-					`${API_URL}/api/unban-user-by-username`,
-					{ username },
-					{
-						headers: {
-							Authorization: `Bearer ${user.token}`,
-							"Content-Type": "application/json",
-						},
-					}
-				);
+				const response = await axiosInstance.post("/api/unban-user-by-username", {
+					username,
+				});
 				console.log("Unban response:", response.data);
 				if (response.data.success) {
 					setError(`User ${username} has been unbanned successfully.`);
@@ -117,16 +109,9 @@ const ChatWindow = () => {
 		async (messageUserId) => {
 			console.log("Attempting to unban user with ID:", messageUserId);
 			try {
-				const response = await axios.post(
-					`${API_URL}/api/unban-user`,
-					{ userId: messageUserId },
-					{
-						headers: {
-							Authorization: `Bearer ${user.token}`,
-							"Content-Type": "application/json",
-						},
-					}
-				);
+				const response = await axiosInstance.post("/api/unban-user", {
+					userId: messageUserId,
+				});
 				console.log("Unban response:", response.data);
 				setMessages((prevMessages) =>
 					prevMessages.map((msg) =>
@@ -150,6 +135,7 @@ const ChatWindow = () => {
 		},
 		[user, setMessages, setError]
 	);
+
 	const handleSendMessage = useCallback(
 		async (event) => {
 			event.preventDefault();
@@ -214,7 +200,6 @@ const ChatWindow = () => {
 
 	const handleDeleteMessage = useCallback(
 		async (messageId) => {
-			console.log("Attempting to delete message with ID:", messageId);
 			if (!messageId) {
 				console.error("Invalid message ID");
 				setError("Cannot delete message: Invalid ID");
@@ -276,56 +261,66 @@ const ChatWindow = () => {
 	}, [socket]);
 
 	return (
-		<div className="chat-window">
-			<div className="main-chat">
-				<h1>Chat with the greatest Pickup Artists of all time</h1>
-				<div className="message-area">
-					{messages.map((message) => (
-						<Message
-							handleUnbanUser={handleUnbanUser}
-							handleBanByUsername={handleBanByUsername}
-							handleDeleteMessage={handleDeleteMessage}
-							handleUserClick={handleUserClick}
-							user={user}
-							key={message.id || message._id}
-							message={message}
-						/>
-					))}
-					{Object.entries(typingBots).map(
-						([botName, isTyping]) =>
-							isTyping && (
-								<div key={botName} className="typing-indicator">
-									{botName} is typing...
-								</div>
-							)
-					)}
-					<div ref={messagesEndRef} />
-				</div>
-				<form onSubmit={handleSendMessage} className="message-input">
-					<AutocompleteInput
-						value={inputPrefix + input}
-						onChange={(newValue) => {
-							if (newValue.startsWith(inputPrefix)) {
-								setInput(newValue.slice(inputPrefix.length));
-							} else {
-								setInput(newValue);
-								setInputPrefix("");
-							}
-						}}
-						onSubmit={handleSendMessage}
-						users={users}
-						prefix={inputPrefix}
+		<div className="flex flex-col h-full w-full px-2 sm:px-4 ">
+			<h1 className="text-2xl font-semibold text-textPrimary mb-4 text-center">
+				Chat with the greatest Pickup Artists of all time
+			</h1>
+
+			<div className="flex-grow overflow-y-auto p-2 rounded-lg shadow-inner scrollbar-hidden">
+				{messages.map((message) => (
+					<Message
+						handleUnbanUser={handleUnbanUser}
+						handleBanByUsername={handleBanByUsername}
+						handleDeleteMessage={handleDeleteMessage}
+						user={user}
+						handleUserClick={handleUserClick}
+						key={message.id || message._id}
+						message={message}
 					/>
-					<button type="submit">Send</button>
-				</form>
+				))}
+				{Object.entries(typingBots).map(
+					([botName, isTyping]) =>
+						isTyping && (
+							<div
+								key={botName}
+								className="text-base italic text-textPrimary mt-2 flex items-center"
+							>
+								{botName} is typing
+								<div className="typing-indicator ml-1">
+									<span className="inline-block" />
+									<span className="inline-block" />
+									<span className="inline-block" />
+								</div>
+							</div>
+						)
+				)}
+
+				<div ref={messagesEndRef} />
 			</div>
-			{selectedUser && (
-				<UserProfileCard
-					user={selectedUser}
-					position={cardPosition}
-					onClose={() => setSelectedUser(null)}
+
+			<form onSubmit={handleSendMessage} className="flex mt-4 w-full max-w-xl">
+				<AutocompleteInput
+					value={inputPrefix + input}
+					onChange={(newValue) => {
+						if (newValue.startsWith(inputPrefix)) {
+							setInput(newValue.slice(inputPrefix.length));
+						} else {
+							setInput(newValue);
+							setInputPrefix("");
+						}
+					}}
+					onSubmit={handleSendMessage}
+					users={users}
+					prefix={inputPrefix}
+					className="flex-grow p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 w-full sm:w-auto transition duration-200"
 				/>
-			)}
+				<button
+					type="submit"
+					className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 w-1/3 sm:w-auto transition duration-200"
+				>
+					Send
+				</button>
+			</form>
 		</div>
 	);
 };

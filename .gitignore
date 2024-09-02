@@ -36,10 +36,6 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# Uploaded files
-backend/uploads/*
-!backend/uploads/.gitkeep
-
 # Misc
 *.swp
 *.swo
