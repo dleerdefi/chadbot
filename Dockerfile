@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y nodejs npm
 WORKDIR /app
 
 COPY frontend/package.json ./frontend/
-RUN cd frontend && npm install
+RUN cd frontend && npm install --force
 
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
