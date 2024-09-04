@@ -10,7 +10,7 @@ const UserList = ({ users, toggleSidebar }) => {
 			<h3 id="users-heading" className="text-xl font-semibold mb-4 text-textPrimary">
 				Users and Bots
 			</h3>
-			<div className="h-3/5 overflow-auto scrollbar-hidden">
+			<div className="h-3/5 overflow-auto scrollbar-hidden ">
 				{users.length > 0 ? (
 					<ul className="divide-y divide-message">
 						{users.map((user, i) => (
@@ -18,18 +18,20 @@ const UserList = ({ users, toggleSidebar }) => {
 								key={user._id || `user-${user.username || "unknown"}`}
 								className="flex items-center p-3 shadow-sm  transition-colors duration-300 cursor-pointer"
 							>
-								<ContextMenuTrigger id={i}>
+								<ContextMenuTrigger id={i.toString()}>
 									<div className="relative w-12 h-12 mr-3">
 										<img
 											src={
 												user.profilePic
-													? `${process.env.REACT_APP_API_URL}${user.profilePic}`
-													: "/images/bot-avatars/john_sinn_pfp.jpg"
+													? user.isBot
+														? user.profilePic
+														: `${process.env.REACT_APP_API_URL}${user.profilePic}`
+													: "/images/default-avatar.png"
 											}
 											alt={`${user.username}'s avatar`}
-											className="w-full h-full rounded-full border-2 border-card text-xs text-gray-200"
+											className="w-full h-full rounded-full border-2 border-card
+										text-xs text-gray-200"
 										/>
-
 										<div
 											className={`absolute top-0 right-0 -translate-x-1 w-2 h-2 rounded-full ${
 												user.isOnline ? "bg-success" : "bg-danger"
@@ -40,15 +42,17 @@ const UserList = ({ users, toggleSidebar }) => {
 								</ContextMenuTrigger>
 
 								<ContextMenu
-									id={i}
+									id={i.toString()}
 									className="bg-gray-100 p-4 rounded-md z-50 max-w-72"
 								>
 									<div className="flex items-center">
 										<img
 											src={
 												user.profilePic
-													? `${process.env.REACT_APP_API_URL}${user.profilePic}`
-													: "/images/bot-avatars/john_sinn_pfp.jpg"
+													? user.isBot
+														? user.profilePic
+														: `${process.env.REACT_APP_API_URL}${user.profilePic}`
+													: "/images/default-avatar.png"
 											}
 											alt={`${user.username}'s profile`}
 											className="w-16 h-16 rounded-full object-cover border-2 border-blue-500 text-primary text-xs"
@@ -82,12 +86,12 @@ const UserList = ({ users, toggleSidebar }) => {
 								<span
 									className="flex-1 text-textPrimary ml-2"
 									onClick={(event) => {
-										handleUserClick(user, false, event);
+										handleUserClick(user, event);
 										toggleSidebar(false);
 									}}
 									onKeyDown={(event) => {
 										if (event.key === "Enter") {
-											handleUserClick(user, false, event);
+											handleUserClick(user, event);
 											toggleSidebar(false);
 										}
 									}}

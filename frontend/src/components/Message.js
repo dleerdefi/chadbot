@@ -19,8 +19,10 @@ const Message = ({
 		<ContextMenuTrigger id={message.user._id}>
 			<img
 				src={
-					message.user && message.user.profilePic
-						? `${API_URL}${message.user.profilePic}`
+					message.user.profilePic
+						? message.user.isBot
+							? message.user.profilePic
+							: `${process.env.REACT_APP_API_URL}${user.profilePic}`
 						: "/images/default-avatar.png"
 				}
 				alt="Profile"
@@ -34,8 +36,10 @@ const Message = ({
 			<div className="flex items-center">
 				<img
 					src={
-						message.user && message.user.profilePic
-							? `${API_URL}${message.user.profilePic}`
+						message.user.profilePic
+							? message.user.isBot
+								? message.user.profilePic
+								: `${process.env.REACT_APP_API_URL}${user.profilePic}`
 							: "/images/default-avatar.png"
 					}
 					alt={`${message.user.username}'s profile`}
@@ -61,13 +65,15 @@ const Message = ({
 				</div>
 			</div>
 		</ContextMenu>
+
 		<div className="flex-1 ml-0 sm:ml-4">
 			<div className="flex flex-col sm:flex-row sm:justify-between  items-start sm:items-center mb-2">
 				<strong
 					className="text-blue-400 cursor-pointer hover:underline"
-					onClick={(event) => message.user && handleUserClick(message.user, false, event)}
+					onClick={(event) => message.user && handleUserClick(message.user, event)}
 				>
-					{message.user ? message.user.name : "Unknown User"}
+					{message.user ? message.user.username : "Unknown User"}
+					{message.user.isBot && <span className="text-textSecondary ml-2">(Bot)</span>}
 				</strong>
 				<span className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-0 sm:ml-2">
 					{moment(message.createdAt).format("MMMM Do YYYY, h:mm:ss a")}

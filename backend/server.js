@@ -126,6 +126,7 @@ async function initializeBotUsers() {
 			botUsers.add(bot._id.toString());
 			onlineUsers.add(bot._id.toString());
 		});
+
 		console.log("Bot users initialized:", Array.from(botUsers));
 	} catch (error) {
 		console.error("Error initializing bot users:", error);
@@ -222,17 +223,16 @@ io.on("connection", (socket) => {
 	if (userId && !botUsers.has(userId)) {
 		userSockets.set(userId, socket.id);
 		onlineUsers.add(userId);
+
 		io.emit("userStatusUpdate", { userId, status: "online" });
 	}
 
 	// Handle request for initial online users
 	socket.on("getInitialOnlineUsers", async () => {
 		try {
-			const allOnlineUsers = new Set([...onlineUsers, ...botUsers]);
+			const allOnlineUsers = new Set([...onlineUsers]);
 			socket.emit("initialOnlineUsers", Array.from(allOnlineUsers));
-			console.log("Sent initial online users:", Array.from(allOnlineUsers));
 		} catch (error) {
-			console.error("Error fetching initial online users:", error);
 			socket.emit("error", { message: "Failed to fetch online users" });
 		}
 	});
@@ -260,7 +260,7 @@ io.on("connection", (socket) => {
 
 	socket.on("chatMessage", async (data) => {
 		try {
-			const user = await User.findOne({ firebaseUid: socket.userId });
+			const user = await User.findOne({ _id: socket.userId });
 			if (!user) {
 				socket.emit("error", { message: "User not found" });
 				return;
@@ -406,7 +406,6 @@ app.post("/register", async (req, res) => {
 	console.log("Received registration request for:", email);
 	try {
 		let user = await User.findOne({ email });
-		console.log("Existing user in MongoDB:", user);
 		if (user) {
 			return res.status(400).json({ error: "User already exists" });
 		}
@@ -416,7 +415,6 @@ app.post("/register", async (req, res) => {
 			password,
 			emailVerified: false,
 		});
-		console.log("User created in Firebase:", userRecord.uid);
 
 		user = new User({
 			email,
@@ -588,9 +586,9 @@ app.get("/api/all-users", authenticateFirebaseToken, async (req, res) => {
 			users = await User.find({}, "-password");
 		} else {
 			// Standard users get limited user details, including bio
-			users = await User.find({}, "username profilePic isOnline bio email");
+			users = await User.find();
 		}
-		console.log("Fetched users:", users); // Add this line for debugging
+
 		res.json(users);
 	} catch (error) {
 		console.error("Error fetching users:", error);
@@ -599,8 +597,6 @@ app.get("/api/all-users", authenticateFirebaseToken, async (req, res) => {
 });
 
 app.get("/api/bots", (req, res) => {
-	console.log("Received request for bots");
-	console.log("Bots:", bots); // This will help you see what 'bots' contains
 	res.json(
 		bots.map((bot) => ({
 			name: bot.username,
@@ -855,7 +851,7 @@ app.post("/api/messages", authenticateFirebaseToken, async (req, res) => {
 		io.emit("message", {
 			id: message._id,
 			text: message.text,
-			user,
+			user: req.user,
 			createdAt: message.createdAt,
 			room: message.room,
 		});

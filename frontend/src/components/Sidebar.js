@@ -5,50 +5,26 @@ import SearchBar from "./SearchBar";
 
 const Sidebar = ({ collapsed, toggleCollapse }) => {
 	const [searchTerm, setSearchTerm] = useState("");
-	const { onlineUsers, bots, users, isBotLoading } = useWebSocket();
+	const { users, isBotLoading } = useWebSocket();
 	const sidebarRef = useRef(null);
 
 	const filteredUsers = useMemo(() => {
-		const userMap = new Map();
-
-		(bots || []).forEach((bot) => {
-			const botId = bot._id || bot.id;
-			userMap.set(botId, {
-				...bot,
-				isBot: true,
-				isOnline: true,
-				_id: botId,
-				username: bot.name || bot.username,
-			});
-		});
-
-		(users || []).forEach((user) => {
-			if (!userMap.has(user._id)) {
-				userMap.set(user._id, {
-					...user,
-					isBot: false,
-					isOnline: onlineUsers.includes(user._id),
-					_id: user._id,
-				});
-			}
-		});
-
-		const allUsers = Array.from(userMap.values());
-
-		const filteredAndSortedUsers = allUsers
+		const sortedUsers = users
 			.filter((user) =>
 				(user.username || user.name || "").toLowerCase().includes(searchTerm.toLowerCase())
 			)
 			.sort((a, b) => {
+				// Prioritize sorting by bot status and online status
 				if (a.isBot && !b.isBot) return -1;
 				if (!a.isBot && b.isBot) return 1;
 				if (a.isOnline && !b.isOnline) return -1;
 				if (!a.isOnline && b.isOnline) return 1;
+				// Sort alphabetically by username or name
 				return (a.username || a.name || "").localeCompare(b.username || b.name || "");
 			});
 
-		return filteredAndSortedUsers;
-	}, [users, bots, searchTerm, onlineUsers]);
+		return sortedUsers;
+	}, [users, searchTerm]);
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {

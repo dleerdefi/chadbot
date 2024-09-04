@@ -11,7 +11,7 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 const Account = ({ collapsed, toggleCollapse }) => {
 	const { user, setUser } = useAuth();
-	const { updateMessagesUser } = useWebSocket();
+	const { updateUser } = useWebSocket();
 	const [username, setUsername] = React.useState(user.username || "");
 	const [bio, setBio] = React.useState(user.bio || "");
 	const { setSuccess, setError } = useApp();
@@ -33,7 +33,7 @@ const Account = ({ collapsed, toggleCollapse }) => {
 		try {
 			const response = await axiosInstance.post("/api/update-profile", { username, bio });
 			setUser(response.data.user);
-			updateMessagesUser(response.data.user);
+			updateUser(response.data.user);
 			setSuccess("Profile updated successfully");
 		} catch (error) {
 			setError("Failed to update profile: " + (error.response?.data?.error || error.message));
@@ -53,7 +53,7 @@ const Account = ({ collapsed, toggleCollapse }) => {
 			});
 
 			setUser(response.data.user);
-			updateMessagesUser(response.data.user);
+			updateUser(response.data.user);
 			setSuccess("Profile picture uploaded successfully");
 		} catch (error) {
 			setError(

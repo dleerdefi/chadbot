@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, memo } from "react";
-import PropTypes from "prop-types";
 
 const AutocompleteInput = memo(({ value, onChange, onSubmit, users }) => {
 	const [suggestions, setSuggestions] = useState([]);

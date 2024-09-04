@@ -17,7 +17,6 @@ const ChatWindow = () => {
 		sendMessage,
 		messages,
 		setMessages,
-		setOnlineUsers,
 		typingBots,
 		users,
 		inputPrefix,
@@ -234,32 +233,6 @@ const ChatWindow = () => {
 		};
 	}, [selectedUser, closeProfileCard]);
 
-	useEffect(() => {
-		if (socket) {
-			const handleInitialOnlineUsers = (initialOnlineUsers) => {
-				setOnlineUsers(initialOnlineUsers);
-			};
-
-			const handleUserStatusUpdate = ({ userId, status }) => {
-				setOnlineUsers((prev) =>
-					status === "online"
-						? [...new Set([...prev, userId])]
-						: prev.filter((id) => id !== userId)
-				);
-			};
-
-			socket.on("initialOnlineUsers", handleInitialOnlineUsers);
-			socket.on("userStatusUpdate", handleUserStatusUpdate);
-
-			socket.emit("getInitialOnlineUsers");
-
-			return () => {
-				socket.off("initialOnlineUsers", handleInitialOnlineUsers);
-				socket.off("userStatusUpdate", handleUserStatusUpdate);
-			};
-		}
-	}, [socket]);
-
 	return (
 		<div className="flex flex-col h-full w-full px-2 sm:px-4 ">
 			<h1 className="text-2xl font-semibold text-textPrimary mb-4 text-center">
@@ -298,7 +271,7 @@ const ChatWindow = () => {
 				<div ref={messagesEndRef} />
 			</div>
 
-			<form onSubmit={handleSendMessage} className="flex mt-4 w-full max-w-xl">
+			<form onSubmit={handleSendMessage} className="flex my-4 w-full max-w-xl">
 				<AutocompleteInput
 					value={inputPrefix + input}
 					onChange={(newValue) => {

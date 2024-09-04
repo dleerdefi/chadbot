@@ -3,7 +3,6 @@ import axiosInstance from "../utils/axiosInstance";
 import { useApp } from "./AppContext";
 import { auth } from "../lib/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { useWebSocket } from "./WebSocketContext";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {

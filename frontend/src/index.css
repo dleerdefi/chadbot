@@ -74,7 +74,7 @@
 		width: 4px;
 		height: 4px;
 		margin: 0 2px;
-		background-color: #6b7280; /* Tailwind CSS gray-500 */
+		background-color: var(--color-text-primary); 
 		border-radius: 50%;
 		animation: typing 1.5s infinite steps(3, end);
 	}
