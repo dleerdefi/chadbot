@@ -27,10 +27,10 @@ export const WebSocketProvider = ({ children }) => {
 				setError("Cannot send message: WebSocket is not connected");
 			}
 		},
-		[socket]
+		[socket, setError]
 	);
 
-	const updateUser = (updatedUser) => {
+	const updateUser = useCallback((updatedUser) => {
 		setMessages((prevMessages) =>
 			prevMessages.map((message) =>
 				message.user._id === updatedUser._id
@@ -44,18 +44,28 @@ export const WebSocketProvider = ({ children }) => {
 				user._id === updatedUser._id ? { ...user, ...updatedUser } : user
 			)
 		);
-	};
-
-	// Function to handle user status update
-	const handleUserStatusUpdate = useCallback(({ userId, status }) => {
-		setUsers((prevUsers) =>
-			prevUsers.map((user) =>
-				user._id === userId && !user.isBot
-					? { ...user, isOnline: status === "online" }
-					: user
-			)
-		);
 	}, []);
+
+	const handleUserStatusUpdate = useCallback(
+		({ userId, username, status }) => {
+			if (user && user._id !== userId) {
+				if (status === "online") {
+					setSuccess(`${username} is online`);
+				} else if (status === "offline") {
+					setError(`${username} is offline`);
+				}
+			}
+
+			setUsers((prevUsers) =>
+				prevUsers.map((user) =>
+					user._id === userId && !user.isBot
+						? { ...user, isOnline: status === "online" }
+						: user
+				)
+			);
+		},
+		[user]
+	);
 
 	const handleRateLimitError = useCallback(
 		(error) => {
@@ -74,33 +84,31 @@ export const WebSocketProvider = ({ children }) => {
 	}, []);
 
 	useEffect(() => {
-		const fetchUsersAndBots = async () => {
-			try {
-				setIsBotLoading(true);
-
-				// Fetch users and bots concurrently
-				const [usersResponse] = await Promise.all([axiosInstance.get(`/api/all-users`)]);
-
-				// Combine bots at the beginning of the users array
-				const combinedUsers = [...usersResponse.data];
-				setUsers(combinedUsers);
-				console.log("user fetched");
-			} catch (err) {
-				setError(err.response?.data.message || err.message);
-			} finally {
-				setIsBotLoading(false);
-			}
-		};
 		if (user) {
+			const fetchUsersAndBots = async () => {
+				try {
+					setIsBotLoading(true);
+					const [usersResponse] = await Promise.all([
+						axiosInstance.get(`/api/all-users`),
+					]);
+					const combinedUsers = [...usersResponse.data];
+					setUsers(combinedUsers);
+				} catch (err) {
+					setError(err.response?.data.message || err.message);
+				} finally {
+					setIsBotLoading(false);
+				}
+			};
+
 			fetchUsersAndBots().then(() => {
 				if (socket) {
 					const handleInitialOnlineUsers = (initialOnlineUsers) => {
-						setUsers((prevUsers) => {
-							return prevUsers.map((u) => ({
+						setUsers((prevUsers) =>
+							prevUsers.map((u) => ({
 								...u,
 								isOnline: u.isBot || initialOnlineUsers.includes(u._id),
-							}));
-						});
+							}))
+						);
 					};
 
 					socket.on("initialOnlineUsers", handleInitialOnlineUsers);
@@ -109,25 +117,7 @@ export const WebSocketProvider = ({ children }) => {
 				}
 			});
 		}
-	}, [socket, user]);
-
-	useEffect(() => {
-		if (user && socket) {
-			socket.on("userStatusUpdate", handleUserStatusUpdate);
-		}
-	}, [socket, user, handleUserStatusUpdate]);
-
-	useEffect(() => {
-		if (socket) {
-			socket.on("botTyping", ({ botName, isTyping }) => {
-				setTypingBots((prev) => ({ ...prev, [botName]: isTyping }));
-			});
-
-			return () => {
-				socket.off("botTyping");
-			};
-		}
-	}, [socket]);
+	}, [user, socket, setError]);
 
 	useEffect(() => {
 		if (user && user.token) {
@@ -147,67 +137,55 @@ export const WebSocketProvider = ({ children }) => {
 			});
 
 			newSocket.on("disconnect", (reason) => {
-				console.log(`WebSocket disconnected: ${reason}`);
 				setError("WebSocket disconnected");
 				setSocket(null);
 			});
 
 			newSocket.on("message", (message) => {
+				if (user._id !== message.user._id) {
+					setSuccess(`New incomming message`);
+				}
+
 				setMessages((prevMessages) => [...prevMessages, message]);
 			});
-		}
-	}, [user]);
 
-	useEffect(() => {
-		if (socket) {
-			const handleNewMessage = (message) => {
-				setMessages((prevMessages) => {
-					if (!prevMessages.some((msg) => msg.id === message.id)) {
-						return [...prevMessages, message];
-					}
-					return prevMessages;
-				});
-			};
+			newSocket.on("botTyping", ({ botName, isTyping }) => {
+				setTypingBots((prev) => ({ ...prev, [botName]: isTyping }));
+			});
 
-			const handleInitialMessages = (initialMessages) => {
+			newSocket.on("userStatusUpdate", handleUserStatusUpdate);
+			newSocket.on("initialMessages", (initialMessages) => {
 				setMessages(() => initialMessages.reverse());
-			};
-
-			const handleUserBanned = ({ userId, username }) => {
-				console.log(`User ${username} has been banned. Removing their messages.`);
+			});
+			newSocket.on("userBanned", ({ userId, username }) => {
 				setMessages((prevMessages) =>
 					prevMessages.filter((msg) => msg.user._id !== userId)
 				);
-			};
-
-			const handleUserUnbanned = ({ userId, username }) => {
-				console.log(`User ${username} has been unbanned.`);
-			};
-
-			socket.on("message", handleNewMessage);
-			socket.on("initialMessages", handleInitialMessages);
-			socket.on("userBanned", handleUserBanned);
-			socket.on("userUnbanned", handleUserUnbanned);
-			socket.on("userStatusUpdate", handleUserStatusUpdate);
-			socket.on("rateLimitError", handleRateLimitError);
-			socket.on("error", (error) => {
+			});
+			newSocket.on("userUnbanned", ({ userId, username }) => {
+				// Handle user unbanned if needed
+			});
+			newSocket.on("rateLimitError", handleRateLimitError);
+			newSocket.on("error", (error) => {
 				setError(`Socket error: ${error.message}`);
 			});
 
-			socket.emit("getInitialMessages");
+			newSocket.emit("getInitialMessages");
 
 			return () => {
-				console.log("Cleaning up socket listeners");
-				socket.off("message", handleNewMessage);
-				socket.off("initialMessages", handleInitialMessages);
-				socket.off("userBanned", handleUserBanned);
-				socket.off("userUnbanned", handleUserUnbanned);
-				socket.off("userStatusUpdate", handleUserStatusUpdate);
-				socket.off("rateLimitError", handleRateLimitError);
-				socket.off("error");
+				newSocket.off("message");
+				newSocket.off("botTyping");
+				newSocket.off("userStatusUpdate");
+				newSocket.off("initialMessages");
+				newSocket.off("userBanned");
+				newSocket.off("userUnbanned");
+				newSocket.off("rateLimitError");
+				newSocket.off("error");
+				newSocket.off("disconnect");
+				newSocket.disconnect();
 			};
 		}
-	}, [socket, setMessages, handleUserStatusUpdate, handleRateLimitError, setError]);
+	}, [user, handleUserStatusUpdate, handleRateLimitError, setError]);
 
 	const contextValue = {
 		socket,

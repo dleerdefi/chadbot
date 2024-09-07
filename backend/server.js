@@ -220,11 +220,12 @@ io.on("connection", (socket) => {
 
 	// Store the user's socket ID when they connect
 	const userId = socket.userId; // Assuming you set this during authentication
+	const username = socket.user.username;
 	if (userId && !botUsers.has(userId)) {
 		userSockets.set(userId, socket.id);
 		onlineUsers.add(userId);
 
-		io.emit("userStatusUpdate", { userId, status: "online" });
+		io.emit("userStatusUpdate", { userId, username, status: "online" });
 	}
 
 	// Handle request for initial online users
@@ -391,7 +392,7 @@ io.on("connection", (socket) => {
 		if (userId) {
 			onlineUsers.delete(userId);
 			userSockets.delete(userId);
-			io.emit("userStatusUpdate", { userId, status: "offline" });
+			io.emit("userStatusUpdate", { userId, username, status: "offline" });
 		}
 	});
 });
