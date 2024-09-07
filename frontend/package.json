@@ -6,7 +6,9 @@
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^5.16.7",
+    "@radix-ui/react-popover": "1.1.1",
     "axios": "^1.7.3",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "firebase": "^10.12.5",
     "immer": "^10.1.1",
@@ -30,6 +32,7 @@
     "shell-quote": "^1.8.1",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
+    "tailwind-merge": "^2.5.2",
     "webpack-dev-middleware": "^7.3.0"
   },
   "scripts": {

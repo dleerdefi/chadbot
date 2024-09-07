@@ -14,12 +14,10 @@ const Sidebar = ({ collapsed, toggleCollapse }) => {
 				(user.username || user.name || "").toLowerCase().includes(searchTerm.toLowerCase())
 			)
 			.sort((a, b) => {
-				// Prioritize sorting by bot status and online status
 				if (a.isBot && !b.isBot) return -1;
 				if (!a.isBot && b.isBot) return 1;
 				if (a.isOnline && !b.isOnline) return -1;
 				if (!a.isOnline && b.isOnline) return 1;
-				// Sort alphabetically by username or name
 				return (a.username || a.name || "").localeCompare(b.username || b.name || "");
 			});
 
@@ -48,7 +46,7 @@ const Sidebar = ({ collapsed, toggleCollapse }) => {
 			)}
 			<div
 				ref={sidebarRef}
-				className={`absolute transition-all duration-300 ease-out bg-gray-800 h-full left-0 top-0 flex flex-col scrollbar-hidden ${
+				className={`absolute transition-all duration-300 ease-out bg-gray-800 h-full left-0 top-0 flex flex-col overflow-y-hidden scrollbar-hidden ${
 					collapsed ? "w-80 p-4" : "w-0 -translate-x-full"
 				} z-20`}
 			>

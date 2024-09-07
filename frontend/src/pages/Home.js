@@ -20,28 +20,34 @@ const Home = () => {
 
 	return (
 		<div className="h-screen w-full flex flex-col">
-			<header className=" w-full">
+			<header className="w-full">
 				<img src={HeaderImage} alt="Header" className="w-full h-auto object-contain" />
-				<div className=" flex justify-between items-center w-full py-4 px-2 text-textSecondary space-x-2">
+				<div className="flex justify-between items-center w-full py-4 px-2 text-textSecondary space-x-2">
 					<button
 						className="p-2 bg-card rounded-full shadow-default transition-colors duration-default"
 						onClick={() => toggleSidebar(!sidebarCollapsed)}
 					>
-						{sidebarCollapsed ? <FaTimes /> : <FaBars />}
+						{sidebarCollapsed ? <FaTimes size={25} /> : <FaBars size={25} />}
 					</button>
 					<button
 						className="p-2 bg-card rounded-full shadow-default transition-colors duration-default"
 						onClick={() => toggleAccount(!accountCollapsed)}
 					>
-						{accountCollapsed ? <FaTimes /> : <IoPersonCircleSharp />}
+						{accountCollapsed ? (
+							<FaTimes size={25} />
+						) : (
+							<IoPersonCircleSharp size={25} />
+						)}
 					</button>
 				</div>
 			</header>
 			<div className="flex flex-1 overflow-hidden relative">
 				<Sidebar toggleCollapse={toggleSidebar} collapsed={sidebarCollapsed} />
 
-				<div className="flex-1 overflow-y-auto">
-					<ChatWindow />
+				<div className="flex-1 relative">
+					<div className="absolute inset-0 overflow-y-auto">
+						<ChatWindow />
+					</div>
 				</div>
 
 				<Account collapsed={accountCollapsed} toggleCollapse={toggleAccount} />

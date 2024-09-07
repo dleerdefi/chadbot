@@ -61,12 +61,12 @@ const AutocompleteInput = memo(({ value, onChange, onSubmit, users }) => {
 				aria-activedescendant={
 					suggestions.length > 0 ? `suggestion-${activeSuggestion}` : undefined
 				}
-				className="w-full text-primary p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500 transition duration-200"
+				className="w-full text-primary p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500 transition duration-200"
 			/>
 			{suggestions.length > 0 && (
 				<ul
 					id="suggestions-list"
-					className="absolute left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto z-10"
+					className="absolute left-0 right-0 bottom-full bg-white p-3 rounded-md shadow-lg mb-1 z-10"
 					role="listbox"
 				>
 					{suggestions.map((suggestion, index) => (
@@ -75,7 +75,7 @@ const AutocompleteInput = memo(({ value, onChange, onSubmit, users }) => {
 							id={`suggestion-${index}`}
 							role="option"
 							aria-selected={index === activeSuggestion}
-							className={`px-3 py-2 cursor-pointer ${
+							className={`px-3 py-2 rounded cursor-pointer ${
 								index === activeSuggestion
 									? "bg-blue-500 text-white"
 									: "bg-white text-gray-900"
