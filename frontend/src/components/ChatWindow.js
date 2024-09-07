@@ -28,6 +28,7 @@ const ChatWindow = () => {
 	const [input, setInput] = useState("");
 
 	const messagesEndRef = useRef(null);
+	const containerREf = useRef(null);
 
 	const sanitizeInput = useCallback((input) => {
 		return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -239,9 +240,13 @@ const ChatWindow = () => {
 				Chat with the greatest Pickup Artists of all time
 			</h1>
 
-			<div className="flex-grow overflow-y-auto p-2 rounded-lg shadow-inner scrollbar-hidden">
+			<div
+				ref={containerREf}
+				className="flex-grow overflow-y-auto p-2 rounded-lg shadow-inner scrollbar-hidden"
+			>
 				{messages.map((message) => (
 					<Message
+						containerRef={containerREf}
 						handleUnbanUser={handleUnbanUser}
 						handleBanByUsername={handleBanByUsername}
 						handleDeleteMessage={handleDeleteMessage}

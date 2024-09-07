@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import moment from "moment";
 import { Popover, PopoverContent, PopoverTrigger } from "./Popover";
 
@@ -9,13 +9,33 @@ const Message = ({
 	handleUnbanUser,
 	user,
 	handleUserClick,
+	containerRef,
 }) => {
+	const [openPopover, setOpenPopover] = useState(false);
+
+	useEffect(() => {
+		const handleScroll = () => {
+			setOpenPopover(false);
+		};
+
+		const container = containerRef.current;
+		if (container) {
+			container.addEventListener("scroll", handleScroll);
+		}
+
+		return () => {
+			if (container) {
+				container.removeEventListener("scroll", handleScroll);
+			}
+		};
+	}, []);
+
 	return (
 		<div
 			key={message.id || message._id}
 			className="flex flex-col sm:flex-row items-start p-3 mb-2 bg-gray-800 rounded-lg shadow-lg "
 		>
-			<Popover>
+			<Popover open={openPopover}>
 				<PopoverTrigger asChild>
 					<img
 						src={
@@ -25,12 +45,16 @@ const Message = ({
 									: `${process.env.REACT_APP_API_URL}${user.profilePic}`
 								: "/images/default-avatar.png"
 						}
+						disabled={openPopover}
+						onClick={() => {
+							setOpenPopover(!openPopover);
+						}}
 						alt="Profile"
-						className="w-12 h-12 rounded-full object-cover cursor-pointer mb-3 sm:mb-0 text-primary text-xs"
+						className="w-12 h-12 rounded-full object-cover cursor-pointer disabled:cursor-none mb-3 sm:mb-0 text-primary text-xs"
 					/>
 				</PopoverTrigger>
 				<PopoverContent
-					forceMount={true}
+					onInteractOutside={() => setOpenPopover(false)}
 					align="start"
 					className="bg-gray-100 p-4 rounded-md space-x-4 space-y-2 z-10"
 				>
