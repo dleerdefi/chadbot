@@ -37,21 +37,31 @@ const Message = ({
 		>
 			<Popover open={openPopover}>
 				<PopoverTrigger asChild>
-					<img
-						src={
-							message.user.profilePic
-								? message.user.isBot
-									? message.user.profilePic
-									: `${process.env.REACT_APP_API_URL}${user.profilePic}`
-								: "/images/default-avatar.png"
-						}
+					<div
+						className="relative w-12 h-12 mr-3 cursor-pointer disabled:cursor-none"
 						disabled={openPopover}
 						onClick={() => {
 							setOpenPopover(!openPopover);
 						}}
-						alt="Profile"
-						className="w-12 h-12 rounded-full object-cover cursor-pointer disabled:cursor-none mb-3 sm:mb-0 text-primary text-xs"
-					/>
+					>
+						<img
+							src={
+								message.user.profilePic
+									? message.user.isBot
+										? message.user.profilePic
+										: `${process.env.REACT_APP_API_URL}${message.user.profilePic}`
+									: "/images/default-avatar.png"
+							}
+							alt={`${message.user.username}'s avatar`}
+							className="w-full h-full rounded-full border-2 border-card text-xs text-gray-200"
+						/>
+						<div
+							className={`absolute top-0 right-0 -translate-x-1 w-2 h-2 rounded-full ${
+								message.user.isOnline ? "bg-success" : "bg-danger"
+							}`}
+							aria-label={message.user.isOnline ? "Online" : "Offline"}
+						/>
+					</div>
 				</PopoverTrigger>
 				<PopoverContent
 					onInteractOutside={() => setOpenPopover(false)}

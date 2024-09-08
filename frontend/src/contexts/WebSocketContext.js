@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import io from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import axiosInstance from "../utils/axiosInstance";
@@ -18,6 +18,7 @@ export const WebSocketProvider = ({ children }) => {
 	const [selectedUser, setSelectedUser] = useState(null);
 	const { user } = useAuth();
 	const { setError, setSuccess } = useApp();
+	const isFirstRun = useRef(true);
 
 	const sendMessage = useCallback(
 		(message) => {
@@ -29,12 +30,18 @@ export const WebSocketProvider = ({ children }) => {
 		},
 		[socket, setError]
 	);
-
 	const updateUser = useCallback((updatedUser) => {
 		setMessages((prevMessages) =>
 			prevMessages.map((message) =>
 				message.user._id === updatedUser._id
-					? { ...message, user: { ...message.user, ...updatedUser } }
+					? {
+							...message,
+							user: {
+								...message.user,
+								...updatedUser,
+								isOnline: updatedUser.isOnline, // Ensure isOnline is updated
+							},
+					  }
 					: message
 			)
 		);
@@ -56,6 +63,22 @@ export const WebSocketProvider = ({ children }) => {
 				}
 			}
 
+			// Update user status in messages
+			setMessages((prevMessages) =>
+				prevMessages.map((message) =>
+					message.user._id === userId && !message.user.isBot
+						? {
+								...message,
+								user: {
+									...message.user,
+									isOnline: status === "online",
+								},
+						  }
+						: message
+				)
+			);
+
+			// Update user status in users list
 			setUsers((prevUsers) =>
 				prevUsers.map((user) =>
 					user._id === userId && !user.isBot
@@ -84,7 +107,7 @@ export const WebSocketProvider = ({ children }) => {
 	}, []);
 
 	useEffect(() => {
-		if (user) {
+		if (user && isFirstRun.current && socket) {
 			const fetchUsersAndBots = async () => {
 				try {
 					setIsBotLoading(true);
@@ -92,7 +115,24 @@ export const WebSocketProvider = ({ children }) => {
 						axiosInstance.get(`/api/all-users`),
 					]);
 					const combinedUsers = [...usersResponse.data];
+
+					// Update users state
 					setUsers(combinedUsers);
+
+					// Update messages state to include `isOnline` for each message.user
+					setMessages((prevMessages) =>
+						prevMessages.map((message) => {
+							const matchedUser = combinedUsers.find(
+								(u) => u._id === message.user._id
+							);
+							return matchedUser
+								? {
+										...message,
+										user: { ...message.user, isOnline: matchedUser.isOnline },
+								  }
+								: message;
+						})
+					);
 				} catch (err) {
 					setError(err.response?.data.message || err.message);
 				} finally {
@@ -103,11 +143,33 @@ export const WebSocketProvider = ({ children }) => {
 			fetchUsersAndBots().then(() => {
 				if (socket) {
 					const handleInitialOnlineUsers = (initialOnlineUsers) => {
+						// Update `isOnline` status for users and messages when initial online users are received
 						setUsers((prevUsers) =>
 							prevUsers.map((u) => ({
 								...u,
 								isOnline: u.isBot || initialOnlineUsers.includes(u._id),
 							}))
+						);
+
+						setMessages((prevMessages) =>
+							prevMessages.map((message) => {
+								const matchedUser = initialOnlineUsers.find(
+									(userId) => userId === message.user._id
+								);
+								if (matchedUser) {
+									return {
+										...message,
+										user: { ...message.user, isOnline: true },
+									};
+								}
+								if (message.user.isBot) {
+									return {
+										...message,
+										user: { ...message.user, isOnline: true },
+									};
+								}
+								return { ...message, user: { ...message.user, isOnline: false } };
+							})
 						);
 					};
 
@@ -116,6 +178,8 @@ export const WebSocketProvider = ({ children }) => {
 					socket.emit("getInitialOnlineUsers");
 				}
 			});
+
+			isFirstRun.current = false;
 		}
 	}, [user, socket, setError]);
 
@@ -143,10 +207,19 @@ export const WebSocketProvider = ({ children }) => {
 
 			newSocket.on("message", (message) => {
 				if (user._id !== message.user._id) {
-					setSuccess(`New incomming message`);
+					setSuccess(`New incoming message`);
 				}
 
-				setMessages((prevMessages) => [...prevMessages, message]);
+				setMessages((prevMessages) => [
+					...prevMessages,
+					{
+						...message,
+						user: {
+							...message.user,
+							isOnline: true,
+						},
+					},
+				]);
 			});
 
 			newSocket.on("botTyping", ({ botName, isTyping }) => {
