@@ -290,7 +290,7 @@ const ChatWindow = () => {
 					onSubmit={handleSendMessage}
 					users={users}
 					prefix={inputPrefix}
-					className="flex-grow p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 w-full sm:w-auto transition duration-200"
+					className="flex-grow p-2 border border-gray-300  focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 w-full sm:w-auto transition duration-200"
 				/>
 				<button
 					type="submit"
