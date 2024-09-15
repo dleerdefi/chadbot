@@ -30,6 +30,7 @@ export const WebSocketProvider = ({ children }) => {
 		},
 		[socket, setError]
 	);
+	
 	const updateUser = useCallback((updatedUser) => {
 		setMessages((prevMessages) =>
 			prevMessages.map((message) =>
@@ -39,7 +40,7 @@ export const WebSocketProvider = ({ children }) => {
 							user: {
 								...message.user,
 								...updatedUser,
-								isOnline: updatedUser.isOnline, // Ensure isOnline is updated
+								isOnline: updatedUser.isOnline,
 							},
 					  }
 					: message

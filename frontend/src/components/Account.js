@@ -32,8 +32,8 @@ const Account = ({ collapsed, toggleCollapse }) => {
 	const updateProfile = async () => {
 		try {
 			const response = await axiosInstance.post("/api/update-profile", { username, bio });
-			setUser({ ...user, ...response.data.user });
-			updateUser({ ...user, ...response.data.user });
+			setUser({ ...response.data.user, isOnline: true });
+			updateUser({ ...response.data.user, isOnline: true });
 			setSuccess("Profile updated successfully");
 		} catch (error) {
 			setError("Failed to update profile: " + (error.response?.data?.error || error.message));
@@ -52,8 +52,8 @@ const Account = ({ collapsed, toggleCollapse }) => {
 				},
 			});
 
-			setUser({ ...user, ...response.data.user });
-			updateUser({ ...user, ...response.data.user });
+			setUser({ ...response.data.user, isOnline: user.isOnline });
+			updateUser({ ...response.data.user, isOnline: user.isOnline });
 			setSuccess("Profile picture uploaded successfully");
 		} catch (error) {
 			setError(
