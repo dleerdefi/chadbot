@@ -185,7 +185,7 @@ export const WebSocketProvider = ({ children }) => {
 
 			isFirstRun.current = false;
 		}
-	}, [user, socket, setError]);
+	}, [user, socket]);
 
 	useEffect(() => {
 		if (user && user.token && isFirstRun.current && (!socket || !socket.connected)) {
@@ -198,6 +198,8 @@ export const WebSocketProvider = ({ children }) => {
 			newSocket.on("connect", () => {
 				setSocket(newSocket);
 			});
+
+			newSocket.emit("getInitialMessages");
 		}
 	}, [user, socket, isFirstRun]);
 
@@ -253,31 +255,22 @@ export const WebSocketProvider = ({ children }) => {
 			socket.on("error", (error) => {
 				setError(`Socket error: ${error.message}`);
 			});
+		}
 
-			// Emit initial messages request
-			socket.emit("getInitialMessages");
-
-			// Cleanup function
-			return () => {
-				console.log("Cleaning up socket events");
-				socket.off("message");
+		return () => {
+			if (socket) {
 				socket.off("botTyping");
-				socket.off("userStatusUpdate");
-				socket.off("initialMessages");
 				socket.off("userBanned");
 				socket.off("userUnbanned");
 				socket.off("rateLimitError");
 				socket.off("error");
 				socket.off("disconnect");
-
-				// Prevent unnecessary socket disconnects on updates
-				if (socket.connected) {
-					console.log("Socket disconnecting");
-					socket.disconnect(); // Only disconnect if it's needed
-				}
-			};
-		}
-	}, [user, handleUserStatusUpdate, handleRateLimitError, setError, socket]);
+				socket.off("message");
+				socket.off("userStatusUpdate");
+				socket.off("initialMessages");
+			}
+		};
+	}, [user, socket]);
 
 	const contextValue = {
 		socket,

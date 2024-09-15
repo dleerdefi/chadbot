@@ -11,7 +11,7 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 const Account = ({ collapsed, toggleCollapse }) => {
 	const { user, setUser } = useAuth();
-	const { updateUser } = useWebSocket();
+	const { updateUser, socket } = useWebSocket();
 	const [username, setUsername] = React.useState(user.username || "");
 	const [bio, setBio] = React.useState(user.bio || "");
 	const { setSuccess, setError } = useApp();
@@ -67,6 +67,8 @@ const Account = ({ collapsed, toggleCollapse }) => {
 	const handleLogout = async () => {
 		try {
 			await signOut(auth);
+
+			socket.disconnect();
 			setUser(null);
 			navigate("/login");
 		} catch (error) {
