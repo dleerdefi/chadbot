@@ -387,8 +387,8 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("disconnect", () => {
-		console.log("Client disconnected");
+	socket.on("disconnect", (reason) => {
+		console.log("Client disconnected", reason);
 		if (userId) {
 			onlineUsers.delete(userId);
 			userSockets.delete(userId);

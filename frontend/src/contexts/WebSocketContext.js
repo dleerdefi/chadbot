@@ -30,29 +30,33 @@ export const WebSocketProvider = ({ children }) => {
 		},
 		[socket, setError]
 	);
-	
-	const updateUser = useCallback((updatedUser) => {
-		setMessages((prevMessages) =>
-			prevMessages.map((message) =>
-				message.user._id === updatedUser._id
-					? {
-							...message,
-							user: {
-								...message.user,
-								...updatedUser,
-								isOnline: updatedUser.isOnline,
-							},
-					  }
-					: message
-			)
-		);
 
-		setUsers((prevUsers) =>
-			prevUsers.map((user) =>
-				user._id === updatedUser._id ? { ...user, ...updatedUser } : user
-			)
-		);
-	}, []);
+	const updateUser = useCallback(
+		(updatedUser) => {
+			setMessages((prevMessages) =>
+				prevMessages.map((message) => {
+					const currentUser = message.user._id === updatedUser._id;
+
+					return currentUser
+						? {
+								...message,
+								user: {
+									...message.user,
+									...updatedUser,
+								},
+						  }
+						: message;
+				})
+			);
+
+			setUsers((prevUsers) =>
+				prevUsers.map((user) =>
+					user._id === updatedUser._id ? { ...user, ...updatedUser } : user
+				)
+			);
+		},
+		[socket]
+	);
 
 	const handleUserStatusUpdate = useCallback(
 		({ userId, username, status }) => {
@@ -108,7 +112,7 @@ export const WebSocketProvider = ({ children }) => {
 	}, []);
 
 	useEffect(() => {
-		if (user && isFirstRun.current && socket) {
+		if (user && isFirstRun.current && socket && socket.connected) {
 			const fetchUsersAndBots = async () => {
 				try {
 					setIsBotLoading(true);
@@ -144,7 +148,6 @@ export const WebSocketProvider = ({ children }) => {
 			fetchUsersAndBots().then(() => {
 				if (socket) {
 					const handleInitialOnlineUsers = (initialOnlineUsers) => {
-						// Update `isOnline` status for users and messages when initial online users are received
 						setUsers((prevUsers) =>
 							prevUsers.map((u) => ({
 								...u,
@@ -185,7 +188,7 @@ export const WebSocketProvider = ({ children }) => {
 	}, [user, socket, setError]);
 
 	useEffect(() => {
-		if (user && user.token) {
+		if (user && user.token && isFirstRun.current && (!socket || !socket.connected)) {
 			const newSocket = io(process.env.REACT_APP_API_URL || "http://localhost:3000", {
 				auth: { token: user.token },
 				query: { token: user.token },
@@ -195,18 +198,25 @@ export const WebSocketProvider = ({ children }) => {
 			newSocket.on("connect", () => {
 				setSocket(newSocket);
 			});
+		}
+	}, [user, socket, isFirstRun]);
 
-			newSocket.on("connect_error", (error) => {
+	useEffect(() => {
+		if (user && user.token && socket && socket.connected) {
+			// Handle connection errors
+			socket.on("connect_error", (error) => {
 				setError("WebSocket connection error");
 				console.error("WebSocket connection error:", error);
 			});
 
-			newSocket.on("disconnect", (reason) => {
+			// Handle socket disconnection
+			socket.on("disconnect", (reason) => {
 				setError("WebSocket disconnected");
-				setSocket(null);
+				setSocket(null); // This could trigger a re-render, ensure this is necessary
 			});
 
-			newSocket.on("message", (message) => {
+			// Handle incoming messages
+			socket.on("message", (message) => {
 				if (user._id !== message.user._id) {
 					setSuccess(`New incoming message`);
 				}
@@ -223,43 +233,51 @@ export const WebSocketProvider = ({ children }) => {
 				]);
 			});
 
-			newSocket.on("botTyping", ({ botName, isTyping }) => {
+			// Other socket event listeners
+			socket.on("botTyping", ({ botName, isTyping }) => {
 				setTypingBots((prev) => ({ ...prev, [botName]: isTyping }));
 			});
-
-			newSocket.on("userStatusUpdate", handleUserStatusUpdate);
-			newSocket.on("initialMessages", (initialMessages) => {
+			socket.on("userStatusUpdate", handleUserStatusUpdate);
+			socket.on("initialMessages", (initialMessages) => {
 				setMessages(() => initialMessages.reverse());
 			});
-			newSocket.on("userBanned", ({ userId, username }) => {
+			socket.on("userBanned", ({ userId, username }) => {
 				setMessages((prevMessages) =>
 					prevMessages.filter((msg) => msg.user._id !== userId)
 				);
 			});
-			newSocket.on("userUnbanned", ({ userId, username }) => {
+			socket.on("userUnbanned", ({ userId, username }) => {
 				// Handle user unbanned if needed
 			});
-			newSocket.on("rateLimitError", handleRateLimitError);
-			newSocket.on("error", (error) => {
+			socket.on("rateLimitError", handleRateLimitError);
+			socket.on("error", (error) => {
 				setError(`Socket error: ${error.message}`);
 			});
 
-			newSocket.emit("getInitialMessages");
+			// Emit initial messages request
+			socket.emit("getInitialMessages");
 
+			// Cleanup function
 			return () => {
-				newSocket.off("message");
-				newSocket.off("botTyping");
-				newSocket.off("userStatusUpdate");
-				newSocket.off("initialMessages");
-				newSocket.off("userBanned");
-				newSocket.off("userUnbanned");
-				newSocket.off("rateLimitError");
-				newSocket.off("error");
-				newSocket.off("disconnect");
-				newSocket.disconnect();
+				console.log("Cleaning up socket events");
+				socket.off("message");
+				socket.off("botTyping");
+				socket.off("userStatusUpdate");
+				socket.off("initialMessages");
+				socket.off("userBanned");
+				socket.off("userUnbanned");
+				socket.off("rateLimitError");
+				socket.off("error");
+				socket.off("disconnect");
+
+				// Prevent unnecessary socket disconnects on updates
+				if (socket.connected) {
+					console.log("Socket disconnecting");
+					socket.disconnect(); // Only disconnect if it's needed
+				}
 			};
 		}
-	}, [user, handleUserStatusUpdate, handleRateLimitError, setError]);
+	}, [user, handleUserStatusUpdate, handleRateLimitError, setError, socket]);
 
 	const contextValue = {
 		socket,
