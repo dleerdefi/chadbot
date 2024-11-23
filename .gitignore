@@ -1,13 +1,14 @@
 # Dependencies
 node_modules/
+backend-old
 
 # Environment variables
-backend/.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 frontend/build
+backend/.env
 
 
 # Firebase
