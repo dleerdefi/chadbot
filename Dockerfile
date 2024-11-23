@@ -18,7 +18,7 @@ COPY backend/ ./backend/
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN mkdir -p /app/backend/uploads
+
 WORKDIR /app/backend
 
 CMD ["npm", "start"]
