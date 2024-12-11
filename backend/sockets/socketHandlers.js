@@ -20,7 +20,7 @@ const loadBots = async () => {
 const getBotsAndUsers = () => {
 	const onlineUsersList = [];
 	const offlineUsersList = [];
-	
+
 	const botsWithStatus = botsList.map((bot) => ({
 		...bot.toObject(),
 		status: "online",
@@ -84,7 +84,6 @@ const socketHandlers = async (io) => {
 			try {
 				const messages = await Message.find()
 					.sort({ createdAt: 1 })
-					.limit(50)
 					.populate({
 						path: "sender",
 						refPath: "senderType", // Explicitly specify the refPath
@@ -216,6 +215,11 @@ const socketHandlers = async (io) => {
 				socket.broadcast.emit("updateUser", {
 					alert: { type: "error", text: `${socket.user.username} is offline` },
 					user: { ...socket.user.toObject(), status: "offline" },
+					loggedOut: true,
+				});
+
+				loadBots().then(() => {
+					io.emit("updateBotsAndUsers", { data: getBotsAndUsers() });
 				});
 			}
 		});
@@ -271,4 +275,4 @@ const socketHandlers = async (io) => {
 	}
 };
 
-module.exports = socketHandlers;
+module.exports = { socketHandlers, loadBots };

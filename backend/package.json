@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"main": "server.js",
 	"scripts": {
-		"init": "node setup/initializeBots.js",
+		"init": "cross-env NODE_ENV=custom node setup/initializeBots.js",
 		"start": "node server.js",
 		"dev": "nodemon server.js"
 	},
@@ -24,6 +24,7 @@
 		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
+		"cross-env": "^7.0.3",
 		"nodemon": "^3.1.7"
 	}
 }

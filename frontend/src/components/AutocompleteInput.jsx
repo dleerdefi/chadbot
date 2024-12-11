@@ -61,7 +61,7 @@ const AutocompleteInput = memo(({ value, onChange, onSubmit, users }) => {
 				aria-activedescendant={
 					suggestions.length > 0 ? `suggestion-${activeSuggestion}` : undefined
 				}
-				className="w-full text-primary p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500 transition duration-200"
+				className="w-full text-primaryBg p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500 transition duration-200"
 			/>
 			{suggestions.length > 0 && (
 				<ul

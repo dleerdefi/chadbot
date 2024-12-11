@@ -7,6 +7,7 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 const initializeCloudinary = require("./config/cloudinary");
 const userRoutes = require("./routes/userRoute");
 const authRoutes = require("./routes/authRoute");
+const botRoutes = require("./routes/botRoute");
 const messageRoutes = require("./routes/messageRoute");
 
 const createApp = (io) => {
@@ -37,6 +38,7 @@ const createApp = (io) => {
 	app.use("/api", userRoutes);
 	app.use("/api", authRoutes);
 	app.use("/api", messageRoutes);
+	app.use("/api", botRoutes);
 
 	if (process.env.NODE_ENV === "production") {
 		app.use(express.static(path.join(__dirname, "../frontend/dist")));

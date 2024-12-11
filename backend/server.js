@@ -3,8 +3,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const createApp = require("./app");
 const connectDb = require("./config/connectDb");
-const socketHandlers = require("./sockets/socketHandlers");
-const initializeBots = require("./setup/initializeBots");
+const {socketHandlers} = require("./sockets/socketHandlers");
 
 (async () => {
 	try {
@@ -33,11 +32,6 @@ const initializeBots = require("./setup/initializeBots");
 
 		// run socket
 		await socketHandlers(io);
-
-		// upload bots in production server
-		if (process.env.NODE_ENV === "production") {
-			await initializeBots();
-		}
 
 		// Start server
 		const PORT = process.env.PORT || 5000;

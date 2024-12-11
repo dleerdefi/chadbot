@@ -11,7 +11,6 @@ const authenticated = catchAsyncErrors(async (req, res, next) => {
 	}
 
 	const token = authHeader.split("Bearer ")[1];
-
 	if (!token || token === "" || token === "null") {
 		return next(new ErrorHandler("Unauthorized", 401));
 	}

@@ -23,7 +23,7 @@ const App = () => {
 	}, [success]);
 
 	return (
-		<div className="h-screen max-h-screen min-h-screen w-full bg-primary text-textPrimary">
+		<div className="h-screen max-h-screen min-h-screen w-full bg-primaryBg text-textPrimary">
 			<RouterProvider router={router} />
 			<ToastContainer />
 		</div>

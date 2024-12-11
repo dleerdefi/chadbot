@@ -11,7 +11,7 @@ import axiosInstance, {
 	storeTokens,
 	clearTokens,
 	refreshFirebaseToken,
-} from "../utils/axiosInstance";
+} from "../lib/axiosInstance";
 import { useApp } from "./AppContext";
 
 const AuthContext = createContext();
@@ -44,13 +44,11 @@ export const AuthProvider = ({ children }) => {
 
 	// Fetch current user data from backend
 	const fetchCurrentUser = async (firebaseToken) => {
-		try {
-			const response = await axiosInstance.get(`/api/users/me`);
-			return { ...response.data, firebaseToken };
-		} catch (error) {
-			console.error("Error fetching user data:", error);
-			throw error;
-		}
+		const response = await axiosInstance.get(`/api/users/me`, {
+			headers: { Authorization: `Bearer ${firebaseToken}` },
+		});
+
+		return { ...response.data, firebaseToken };
 	};
 
 	// Firebase auth state listener
@@ -60,9 +58,8 @@ export const AuthProvider = ({ children }) => {
 				if (firebaseUser) {
 					setLoading(true);
 					const firebaseToken = await firebaseUser.getIdToken();
-					const userData = await fetchCurrentUser(firebaseToken);
 
-					// Store both tokens
+					const userData = await fetchCurrentUser(firebaseToken);
 					storeTokens(userData.token, firebaseToken);
 					setUser(userData.user);
 				} else {
@@ -81,7 +78,7 @@ export const AuthProvider = ({ children }) => {
 	}, []);
 
 	// Login handler
-	const login = async ({ email, password }, callback) => {
+	const login = useCallback(async ({ email, password }, callback) => {
 		setLoading(true);
 		try {
 			// Firebase authentication
@@ -96,14 +93,16 @@ export const AuthProvider = ({ children }) => {
 			// Store tokens and update user state
 			storeTokens(response.data.token, firebaseToken);
 			setUser(response.data.user);
-			setSuccess("Logged in successfully!");
 			callback();
+			setSuccess("Logged in successfully!");
 		} catch (error) {
+			console.log(error);
+
 			handleAuthError(error);
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	// Register handler
 	const register = useCallback(
@@ -175,7 +174,7 @@ export const AuthProvider = ({ children }) => {
 	};
 
 	// Logout handler
-	const logout = async () => {
+	const logout = useCallback(async () => {
 		try {
 			await auth.signOut();
 			clearTokens();
@@ -185,7 +184,7 @@ export const AuthProvider = ({ children }) => {
 			console.log(error, "logout");
 			handleAuthError(error);
 		}
-	};
+	}, []);
 
 	// Logout handler
 	const deleteAccount = async () => {

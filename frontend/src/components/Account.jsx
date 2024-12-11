@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import axiosInstance from "../utils/axiosInstance";
+import axiosInstance from "../lib/axiosInstance";
 import { useApp } from "../contexts/AppContext";
 import { useWebSocket } from "../contexts/WebSocketContext";
 
@@ -173,6 +173,14 @@ const Account = ({ collapsed, toggleCollapse }) => {
 							>
 								Update Profile
 							</button>
+							{user.isAdmin && (
+								<button
+									onClick={() => navigate("/admin/dashboard")}
+									className="bg-adminSecondary text-white py-2 px-4 rounded-md hover:bg-adminSecondaryHover transition-colors duration-200"
+								>
+									Admin Dashboard
+								</button>
+							)}
 							<button
 								disabled={loading}
 								onClick={handleLogout}
