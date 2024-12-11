@@ -4,7 +4,7 @@ import { useWebSocket } from "../contexts/WebSocketContext";
 import AutocompleteInput from "./AutocompleteInput";
 import Message from "./Message";
 import { useApp } from "../contexts/AppContext";
-import axiosInstance from "../utils/axiosInstance";
+import axiosInstance from "../lib/axiosInstance";
 
 const ChatWindow = () => {
 	const { user } = useAuth();

@@ -24,13 +24,13 @@ const Home = () => {
 				<img src={HeaderImage} alt="Header" className="w-full h-auto object-contain" />
 				<div className="flex justify-between items-center w-full py-4 px-2 text-textSecondary space-x-2">
 					<button
-						className="p-2 bg-card rounded-full shadow-default transition-colors duration-default"
+						className="p-2 bg-cardBg rounded-full shadow-default transition-colors duration-default"
 						onClick={() => toggleSidebar(!sidebarCollapsed)}
 					>
 						{sidebarCollapsed ? <FaTimes size={25} /> : <FaBars size={25} />}
 					</button>
 					<button
-						className="p-2 bg-card rounded-full shadow-default transition-colors duration-default"
+						className="p-2 bg-cardBg rounded-full shadow-default transition-colors duration-default"
 						onClick={() => toggleAccount(!accountCollapsed)}
 					>
 						{accountCollapsed ? (

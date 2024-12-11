@@ -27,7 +27,7 @@ const uploadImageToCloudinary = async (imagePath) => {
 };
 
 const initializeBots = async () => {
-	if (process.env.NODE_ENV !== "production") {
+	if (process.env.NODE_ENV === "custom") {
 		await connectDb();
 	}
 
@@ -57,7 +57,9 @@ const initializeBots = async () => {
 	console.log("Bot initialization complete.");
 };
 
-if (process.env.NODE_ENV !== "production") {
+console.log(process.env.NODE_ENV === "custom");
+
+if (process.env.NODE_ENV === "custom") {
 	initializeBots()
 		.then(() => {
 			process.exit(0);

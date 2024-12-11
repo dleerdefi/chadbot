@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import io from "socket.io-client";
 import { useAuth } from "./AuthContext";
-import { getStoredTokens } from "../utils/axiosInstance";
+import { clearTokens, getStoredTokens } from "../lib/axiosInstance";
 import { useApp } from "./AppContext";
 
 const WebSocketContext = createContext();
@@ -15,7 +15,7 @@ export const WebSocketProvider = ({ children }) => {
 	const [typingBots, setTypingBots] = useState({});
 	const [inputPrefix, setInputPrefix] = useState("");
 	const [selectedUser, setSelectedUser] = useState(null);
-	const { user, logout, deleteAccount } = useAuth();
+	const { user, logout, deleteAccount, setUser } = useAuth();
 	const { setError, setSuccess } = useApp();
 	const isInitialConnection = useRef(true);
 
@@ -35,7 +35,9 @@ export const WebSocketProvider = ({ children }) => {
 			await logout();
 			socket.disconnect();
 			isInitialConnection.current = true;
-			callback();
+			if (callback) {
+				callback();
+			}
 		},
 		[socket]
 	);
@@ -45,7 +47,10 @@ export const WebSocketProvider = ({ children }) => {
 			await deleteAccount();
 			socket.disconnect();
 			isInitialConnection.current = true;
-			callback();
+
+			if (callback) {
+				callback();
+			}
 		},
 		[socket]
 	);
@@ -96,11 +101,13 @@ export const WebSocketProvider = ({ children }) => {
 				}
 			});
 
-			socket.on("updateUser", ({ user, alert }) => {
+			socket.on("updateUser", ({ user, alert, loggedOut = false }) => {
 				if (user) {
-					setBotsAndUsers((prevBotsAndUsers) =>
-						prevBotsAndUsers.map((item) => (item._id === user._id ? user : item))
-					);
+					if (!loggedOut) {
+						setBotsAndUsers((prevBotsAndUsers) =>
+							prevBotsAndUsers.map((item) => (item._id === user._id ? user : item))
+						);
+					}
 					setMessages((prevMessages) =>
 						prevMessages.map((message) =>
 							message.sender._id === user._id ? { ...message, sender: user } : message
@@ -115,6 +122,42 @@ export const WebSocketProvider = ({ children }) => {
 						setSuccess(alert.text);
 					}
 				}
+			});
+
+			socket.on("updateBot", ({ bot }) => {
+				setBotsAndUsers((prevBotsAndUsers) =>
+					prevBotsAndUsers.map((item) => (item._id === bot._id ? bot : item))
+				);
+				setMessages((prevMessages) =>
+					prevMessages.map((message) =>
+						message.sender._id === bot._id ? { ...message, sender: bot } : message
+					)
+				);
+			});
+
+			socket.on("createBot", ({ bot }) => {
+				setBotsAndUsers((prevBotsAndUsers) => {
+					let lastBotIndex = -1;
+					for (let i = prevBotsAndUsers.length - 1; i >= 0; i--) {
+						if (prevBotsAndUsers[i].isBot) {
+							lastBotIndex = i;
+							break;
+						}
+					}
+
+					const newList = [...prevBotsAndUsers];
+					newList.splice(lastBotIndex + 1, 0, bot);
+					return newList;
+				});
+			});
+
+			socket.on("deleteBot", ({ bot }) => {
+				setBotsAndUsers((prevBotsAndUsers) =>
+					prevBotsAndUsers.filter((item) => item._id !== bot._id)
+				);
+				setMessages((prevMessages) =>
+					prevMessages.filter((message) => message.sender._id !== bot._id)
+				);
 			});
 
 			socket.on("banUser", ({ user }) => {
@@ -147,13 +190,21 @@ export const WebSocketProvider = ({ children }) => {
 				);
 			});
 
-			socket.on("deleteUser", ({ user }) => {
+			socket.on("deleteUser", ({ user: deletedUser }) => {
 				setBotsAndUsers((prevBotsAndUsers) =>
-					prevBotsAndUsers.filter((item) => item._id !== user._id)
+					prevBotsAndUsers.filter((item) => item._id !== deletedUser._id)
 				);
 				setMessages((prevMessages) =>
-					prevMessages.filter((message) => message.sender._id !== user._id)
+					prevMessages.filter((message) => message.sender._id !== deletedUser._id)
 				);
+
+				if (deletedUser._id === user._id) {
+					setUser(null);
+					socket.disconnect();
+					isInitialConnection.current = true;
+					clearTokens();
+					setError("Your account has been deleted by an admin");
+				}
 			});
 
 			socket.on("updateBotsAndUsers", ({ data }) => {

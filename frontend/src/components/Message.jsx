@@ -54,7 +54,7 @@ const Message = ({
 							crossOrigin="anonymous"
 							src={message.sender.profilePic?.url}
 							alt={`${message.sender.username}'s avatar`}
-							className="w-full h-full rounded-full border-2 border-card text-xs text-gray-200"
+							className="w-full h-full rounded-full border-2 border-cardBg text-xs text-gray-200"
 						/>
 						<div
 							className={`absolute top-0 right-0 -translate-x-1 w-2 h-2 rounded-full ${
@@ -74,7 +74,7 @@ const Message = ({
 							crossOrigin="anonymous"
 							src={message.sender.profilePic?.url}
 							alt={`${message.sender.username}'s profile`}
-							className="w-32 h-32 rounded-full object-cover border-2 border-blue-500 text-primary text-xs"
+							className="w-32 h-32 rounded-full object-cover border-2 border-blue-500 text-primaryBg text-xs"
 						/>
 						<div className="ml-4 flex-1">
 							<h3 className="text-lg font-semibold text-gray-800">
@@ -124,31 +124,36 @@ const Message = ({
 					</span>
 				</div>
 				<p className="text-gray-300 text-base my-4">{message.content}</p>
-				{user.isAdmin && message.senderType === "User" && !message.sender.isAdmin && (
+				{user.isAdmin && (
 					<div className="flex flex-wrap gap-2">
 						<button
 							disabled={isLoading}
 							onClick={() => handleDeleteMessage(message._id)}
 							className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 text-xs sm:text-sm"
 						>
-							Delete
+							Delete Message
 						</button>
-						{message.sender.isBanned ? (
-							<button
-								disabled={isLoading}
-								onClick={() => handleUnbanUser(message.sender._id)}
-								className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-xs sm:text-sm"
-							>
-								Unban User
-							</button>
-						) : (
-							<button
-								disabled={isLoading}
-								onClick={() => handleBanUser(message.sender._id)}
-								className="bg-yellow-600 text-white px-3 py-1 rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-xs sm:text-sm"
-							>
-								Ban User
-							</button>
+
+						{message.senderType === "User" && !message.sender.isAdmin && (
+							<>
+								{message.sender.isBanned ? (
+									<button
+										disabled={isLoading}
+										onClick={() => handleUnbanUser(message.sender._id)}
+										className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-xs sm:text-sm"
+									>
+										Unban User
+									</button>
+								) : (
+									<button
+										disabled={isLoading}
+										onClick={() => handleBanUser(message.sender._id)}
+										className="bg-yellow-600 text-white px-3 py-1 rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-xs sm:text-sm"
+									>
+										Ban User
+									</button>
+								)}
+							</>
 						)}
 					</div>
 				)}

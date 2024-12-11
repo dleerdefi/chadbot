@@ -9,6 +9,13 @@ const botSchema = new mongoose.Schema(
 			minlength: 3,
 			maxlength: 30,
 			unique: true,
+			validate: {
+				validator: function (v) {
+					// Regex to check if the string contains only one word (no whitespace)
+					return /^[^\s]+$/.test(v);
+				},
+				message: "Username must be a single word without spaces",
+			},
 		},
 		botRole: {
 			type: String,

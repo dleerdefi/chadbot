@@ -41,7 +41,7 @@ const User = ({ user, toggleSidebar, containerRef }) => {
 							crossOrigin="anonymous"
 							src={user.profilePic?.url}
 							alt={`${user.username}'s avatar`}
-							className="w-full h-full rounded-full border-2 border-card text-xs text-gray-200"
+							className="w-full h-full rounded-full border-2 border-cardBg text-xs text-gray-200"
 						/>
 						<div
 							className={`absolute top-0 right-0 -translate-x-1 w-2 h-2 rounded-full ${
@@ -61,7 +61,7 @@ const User = ({ user, toggleSidebar, containerRef }) => {
 							crossOrigin="anonymous"
 							src={user.profilePic?.url}
 							alt={`${user.username}'s profile`}
-							className="w-16 h-16 rounded-full object-cover border-2 border-blue-500 text-primary text-xs"
+							className="w-16 h-16 rounded-full object-cover border-2 border-blue-500 text-primaryBg text-xs"
 						/>
 						<div className="ml-4 flex-1">
 							<h3 className="text-lg font-semibold text-gray-800">{user.username}</h3>

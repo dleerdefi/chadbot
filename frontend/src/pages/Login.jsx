@@ -13,6 +13,7 @@ const Login = () => {
 		login({ email, password }, () => {
 			setEmail("");
 			setPassword("");
+			navigate("/");
 		});
 	};
 

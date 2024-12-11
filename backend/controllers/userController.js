@@ -156,10 +156,11 @@ exports.banAccountByAdmin = catchAsyncErrors(async (req, res, next) => {
 	res.status(200).json({
 		success: true,
 		message: "User account Banned",
+		user,
 	});
 });
 
-// ban user by admin
+// unban user by admin
 exports.unBanAccountByAdmin = catchAsyncErrors(async (req, res, next) => {
 	const id = req.params.id;
 
@@ -202,5 +203,65 @@ exports.unBanAccountByAdmin = catchAsyncErrors(async (req, res, next) => {
 	res.status(200).json({
 		success: true,
 		message: "User account Unbanned",
+		user,
+	});
+});
+
+exports.deleteAccountByAdmin = catchAsyncErrors(async (req, res, next) => {
+	const id = req.params.id;
+
+	if (!mongoose.Types.ObjectId.isValid(id)) {
+		return next(new ErrorHandler("Invalid user ID", 400));
+	}
+
+	const user = await User.findById(id);
+	if (!user) return next(new ErrorHandler("User not found", 404));
+
+	if (user.isAdmin) {
+		return next(new ErrorHandler("You can't delete an admin", 403));
+	}
+
+	if (user.profilePic && user.profilePic.public_id) {
+		await cloudinary.uploader.destroy(user.profilePic.public_id);
+	}
+
+	await Message.deleteMany({ sender: user._id, senderType: "User" });
+	await User.findByIdAndDelete(user.id);
+	await admin.auth().deleteUser(user.firebaseUID);
+
+	req.io.emit("deleteUser", {
+		user,
+	});
+
+	// Respond with success
+	res.status(200).json({
+		success: true,
+		message: "User account and related data deleted successfully, including Firebase data",
+	});
+});
+
+// Get all users by admin with pagination
+exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
+	// Parse page and limit from query params, with defaults
+	const page = parseInt(req.query.page, 10) || 1; // Default page is 1
+	const limit = parseInt(req.query.limit, 10) || 10; // Default limit is 10
+
+	// Calculate the starting index for pagination
+	const skip = (page - 1) * limit;
+
+	// Fetch users with pagination
+	const totalUsers = await User.countDocuments(); // Get the total number of users
+	const users = await User.find().skip(skip).limit(limit).sort({ createdAt: -1 }); // Optional: Sort by creation date
+
+	// Calculate the total number of pages
+	const totalPages = Math.ceil(totalUsers / limit);
+
+	// Respond with paginated results
+	res.status(200).json({
+		success: true,
+		users,
+		currentPage: page,
+		totalPages,
+		totalUsers,
 	});
 });
