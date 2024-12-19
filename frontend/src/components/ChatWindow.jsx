@@ -181,7 +181,11 @@ const ChatWindow = () => {
 				<AutocompleteInput
 					value={inputPrefix + input}
 					onChange={(newValue) => {
-						if (newValue.startsWith(inputPrefix)) {
+						if (
+							inputPrefix &&
+							inputPrefix.length > 0 &&
+							newValue.startsWith(inputPrefix)
+						) {
 							setInput(newValue.slice(inputPrefix.length));
 						} else {
 							setInput(newValue);
