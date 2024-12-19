@@ -243,10 +243,10 @@ const AdminUsers = () => {
 							<TableHeader className="bg-blue-700/50 justify-between">
 								<TableRow>
 									<TableHead className="w-[100px]">User ID</TableHead>
-									<TableHead>Username</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Role</TableHead>
-									<TableHead>Status</TableHead>
+									<TableHead className="text-left">Username</TableHead>
+									<TableHead className="text-left">Email</TableHead>
+									<TableHead className="text-left">Role</TableHead>
+									<TableHead className="text-left">Status</TableHead>
 									<TableHead className="text-center">Actions</TableHead>
 								</TableRow>
 							</TableHeader>
