@@ -285,7 +285,7 @@ const AdminDashboard = () => {
 						<Card className="bg-blue-950/30 border-blue-800/30">
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 								<CardTitle className="text-sm font-medium text-blue-200">
-									Total Bots
+									Total Messages
 								</CardTitle>
 								<Bot className="h-4 w-4 text-blue-400" />
 							</CardHeader>
