@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Bot, TrendingUp } from "lucide-react";
+import { Bot, TrendingUp, User, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Select,
@@ -227,7 +227,7 @@ const AdminDashboard = () => {
 								<CardTitle className="text-sm font-medium text-blue-200">
 									Total Users
 								</CardTitle>
-								<Bot className="h-4 w-4 text-blue-400" />
+								<User className="h-4 w-4 text-blue-400" />
 							</CardHeader>
 							<CardContent>
 								{/* Display total bots prominently */}
@@ -287,7 +287,7 @@ const AdminDashboard = () => {
 								<CardTitle className="text-sm font-medium text-blue-200">
 									Total Messages
 								</CardTitle>
-								<Bot className="h-4 w-4 text-blue-400" />
+								<MessageCircle className="h-4 w-4 text-blue-400" />
 							</CardHeader>
 							<CardContent>
 								{/* Display total bots prominently */}
