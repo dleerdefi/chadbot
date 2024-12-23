@@ -23,57 +23,73 @@ def get_cache_key(query: str, bot_name: str) -> str:
     """Generate a unique cache key."""
     return hashlib.md5(f"{bot_name}:{query}".encode()).hexdigest()
 
-def get_basic_agent_response(query: str, bot_name: str, context_messages: list) -> str:
-    """Generate a response from the basic agent using the provided query and context messages."""
+def construct_system_prompt(bot_metadata: dict) -> str:
+    """Constructs a comprehensive system prompt using all bot metadata."""
     
-    # Use the botPersonality from the context or define it here
-    # For simplicity, assuming bot_name is used as botPersonality
-    personality = f"You are {bot_name}, a helpful assistant."
+    # Basic identity and role
+    prompt = f"""You are {bot_metadata['username']}, a {bot_metadata['botRole']} specialist.
 
+Bio: {bot_metadata['bio']}
+
+{bot_metadata['botPersonality']}
+
+Core Guidelines:
+1. Always maintain the personality and expertise defined above
+2. Provide responses that align with your specified role and expertise
+3. Use a tone and style consistent with your character
+4. Never break character or refer to yourself as an AI
+5. Leverage your specific expertise while remaining helpful and approachable
+
+When responding:
+1. Draw from your defined expertise and background
+2. Maintain consistency with your bio and personality
+3. Format responses appropriately for your role
+4. Stay focused on your specialized domain
+"""
+    
+    return prompt
+
+def get_basic_agent_response(query: str, bot_metadata: dict, context_messages: list) -> str:
+    """Generate a response using comprehensive bot metadata."""
+    
+    system_prompt = construct_system_prompt(bot_metadata)
+    
     messages = [
-        {"role": "system", "content": personality},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": query}
     ]
 
-    # Append context messages if provided
     if context_messages:
         messages = context_messages + messages
 
     try:
-        # Query OpenAI GPT model
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=messages,
             temperature=0.8,
-            max_tokens=3500  # Adjust as needed for detailed responses
+            max_tokens=8000
         )
-        response_content = response.choices[0].message.content.strip()
-
-        logger.info("Generated response from OpenAI.")
-
-        return response_content
+        return response.choices[0].message.content.strip()
     except Exception as e:
         logger.error(f"An error occurred while generating response: {str(e)}")
         return f"An error occurred while generating the response: {str(e)}"
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Process query, bot_name, and context_messages.')
+    parser = argparse.ArgumentParser()
     parser.add_argument('query', help='User query')
-    parser.add_argument('bot_name', help='Bot name')
+    parser.add_argument('bot_metadata', help='Bot metadata as JSON string')
     parser.add_argument('context_messages', help='Context messages as JSON string')
     args = parser.parse_args()
 
-    query = args.query
-    bot_name = args.bot_name
-    context_messages = json.loads(args.context_messages)
-
-    logger.info(f"Received query: {query}")
-    logger.info(f"Bot name: {bot_name}")
-
     try:
-        # Get the response
-        response = get_basic_agent_response(query, bot_name, context_messages)
+        query = args.query
+        bot_metadata = json.loads(args.bot_metadata)
+        context_messages = json.loads(args.context_messages)
 
+        logger.info(f"Received query: {query}")
+        logger.info(f"Bot metadata: {json.dumps(bot_metadata, indent=2)}")
+
+        response = get_basic_agent_response(query, bot_metadata, context_messages)
         print(json.dumps({"response": response}))
     except Exception as e:
         logger.error(f"Unexpected Error: {str(e)}", exc_info=True)

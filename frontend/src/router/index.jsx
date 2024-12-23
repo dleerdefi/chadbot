@@ -10,6 +10,9 @@ import AdminUsers from "../pages/AdminUsers";
 import AdminBots from "../pages/AdminBots";
 import CreateBot from "../pages/CreateBot.jsx";
 import UpdateBot from "../pages/UpdateBot.jsx";
+import AgentList from "@/pages/AgentList";
+import AgentBuilder from "@/pages/AgentBuilder";
+import UpdateAgent from "@/pages/UpdateAgent";
 
 const router = createBrowserRouter([
 	{
@@ -23,6 +26,18 @@ const router = createBrowserRouter([
 	{
 		path: "/forgot-password",
 		element: <ForgotPassword />,
+	},
+	{
+		path: "/agents",
+		element: <AgentList />,
+	},
+	{
+		path: "/agent/new",
+		element: <AgentBuilder />,
+	},
+	{
+		path: "/agent/:id",
+		element: <UpdateAgent />,
 	},
 	{
 		path: "/admin/dashboard",

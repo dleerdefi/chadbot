@@ -182,6 +182,12 @@ const Account = ({ collapsed, toggleCollapse }) => {
 								</button>
 							)}
 							<button
+								onClick={() => navigate("/agent/new")}
+								className="bg-success text-white py-2 px-4 rounded-md hover:bg-successHover transition-colors duration-200"
+							>
+								Agent Builder
+							</button>
+							<button
 								disabled={loading}
 								onClick={handleLogout}
 								className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors duration-200"

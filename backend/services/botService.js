@@ -19,8 +19,14 @@ const handleBotInteraction = async (bot, message, room, contextMessages) => {
 		const pythonProcess = spawn("python", [
 			path.join(__dirname, "..", "scripts", scriptName),
 			botPrompt,
-			JSON.stringify(bot.username), // Pass the bot data
-			JSON.stringify(contextMessages || []), // Pass the context messages
+			JSON.stringify({
+				username: bot.username,
+				botRole: bot.botRole,
+				botType: bot.botType,
+				bio: bot.bio,
+				botPersonality: bot.botPersonality,
+			}),
+			JSON.stringify(contextMessages || []),
 		]);
 
 		let responseData = "";

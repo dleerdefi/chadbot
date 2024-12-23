@@ -48,6 +48,11 @@ const botSchema = new mongoose.Schema(
 			required: true,
 			enum: ["basic", "dev", "qc"],
 		},
+		createdBy: {
+			type: mongoose.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
 	},
 	{ timestamps: true }
 );
