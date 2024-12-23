@@ -26,9 +26,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bot, Upload, RefreshCw } from "lucide-react";
-import DashboardLayout from "../components/DashboardLayout";
 import { useApp } from "@/contexts/AppContext";
 import { useParams, useNavigate } from "react-router-dom";
+import AgentBuilderLayout from "@/components/AgentBuilderLayout";
 
 // Zod validation schema (same as CreateBot)
 const botSchema = z.object({
@@ -44,7 +44,7 @@ const botSchema = z.object({
 	botPersonality: z.string().min(10, { message: "Bot personality description is required" }),
 });
 
-const UpdateBot = () => {
+const UpdateAgent = () => {
 	const [profileImage, setProfileImage] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isBotLoading, setIsBotLoading] = useState(true);
@@ -70,7 +70,7 @@ const UpdateBot = () => {
 		const fetchBotDetails = async () => {
 			try {
 				setIsBotLoading(true);
-				const response = await axiosInstance.get(`/api/admin/bots/${id}`);
+				const response = await axiosInstance.get(`/api/bots/${id}`);
 				const bot = response.data.bot;
 
 				// Set form values
@@ -90,8 +90,9 @@ const UpdateBot = () => {
 				setBotData(bot);
 				setIsBotLoading(false);
 			} catch (error) {
+				console.log(error);
 				setError(error.response?.data?.message || "Failed to fetch bot details");
-				navigate("/admin/bots");
+				navigate("/agents");
 			}
 		};
 
@@ -129,7 +130,7 @@ const UpdateBot = () => {
 				formData.append("bot", fileInput.files[0]);
 			}
 
-			await axiosInstance.put(`/api/admin/bots/${id}`, formData);
+			await axiosInstance.put(`/api/bots/${id}`, formData);
 
 			setSuccess("Bot updated successfully");
 		} catch (error) {
@@ -145,7 +146,7 @@ const UpdateBot = () => {
 
 	if (isBotLoading) {
 		return (
-			<DashboardLayout>
+			<AgentBuilderLayout>
 				<div className="bg-blue-950/50 mx-auto px-4 py-8 min-h-screen flex justify-center items-center">
 					<div className="max-w-3xl w-full bg-gray-900/40 border border-blue-800/30 rounded-xl shadow-2xl p-6">
 						{/* Header */}
@@ -188,18 +189,18 @@ const UpdateBot = () => {
 						</div>
 					</div>
 				</div>
-			</DashboardLayout>
+			</AgentBuilderLayout>
 		);
 	}
 
 	return (
-		<DashboardLayout>
+		<AgentBuilderLayout>
 			<div className="bg-blue-950/50 mx-auto px-4 py-8 min-h-screen flex justify-center items-center ">
 				<Card className="max-w-3xl w-full mx-auto bg-gray-900/40 border-blue-800/30 shadow-2xl">
 					<CardHeader className="border-b border-blue-800">
 						<CardTitle className="flex items-center gap-2 text-blue-100">
 							<Bot className="w-6 h-6 text-blue-300" />
-							Update Bot: {botData.username}
+							Update Agent: {botData.username}
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="bg-gray-900/40 py-6">
@@ -211,7 +212,7 @@ const UpdateBot = () => {
 										<Avatar className="w-24 h-24 mb-4 ring-2 ring-blue-500/50">
 											<AvatarImage
 												src={profileImage || "/default-bot-avatar.png"}
-												alt="Bot Profile"
+												alt="Agent Profile"
 												className="object-cover"
 											/>
 											<AvatarFallback className="bg-blue-950/90">
@@ -267,7 +268,7 @@ const UpdateBot = () => {
 											render={({ field }) => (
 												<FormItem>
 													<FormLabel className="text-blue-100">
-														Bot Type
+														Agent Type
 													</FormLabel>
 													<Select
 														onValueChange={field.onChange}
@@ -324,7 +325,7 @@ const UpdateBot = () => {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-blue-100">
-												Bot Role
+												Agent Role
 											</FormLabel>
 											<FormControl>
 												<Input
@@ -338,7 +339,7 @@ const UpdateBot = () => {
 												/>
 											</FormControl>
 											<FormDescription className="text-blue-300">
-												Describe the main purpose or function of your bot
+												Describe the main purpose or function of your agent
 											</FormDescription>
 											<FormMessage className="text-red-400" />
 										</FormItem>
@@ -366,7 +367,7 @@ const UpdateBot = () => {
 											</FormControl>
 											<FormDescription className="text-blue-300">
 												A short description that helps users understand your
-												bot
+												agent
 											</FormDescription>
 											<FormMessage className="text-red-400" />
 										</FormItem>
@@ -380,7 +381,7 @@ const UpdateBot = () => {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-blue-100">
-												Bot Personality
+												Agent Personality
 											</FormLabel>
 											<FormControl>
 												<Textarea
@@ -415,7 +416,7 @@ const UpdateBot = () => {
 									{isLoading ? (
 										<>
 											<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-											Updating Bot...
+											Updating Agent...
 										</>
 									) : (
 										"Update Bot"
@@ -426,8 +427,8 @@ const UpdateBot = () => {
 					</CardContent>
 				</Card>
 			</div>
-		</DashboardLayout>
+		</AgentBuilderLayout>
 	);
 };
 
-export default UpdateBot;
+export default UpdateAgent;

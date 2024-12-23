@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import DashboardLayout from "../components/DashboardLayout";
 import axiosInstance from "../lib/axiosInstance";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +31,9 @@ import { useApp } from "../contexts/AppContext";
 import { Brain, Trash2, Edit2, PlusCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import AgentBuilderLayout from "@/components/AgentBuilderLayout";
 
-const AdminBots = () => {
+const AgentList = () => {
 	const [bots, setBots] = useState([]);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
@@ -52,14 +52,14 @@ const AdminBots = () => {
 			try {
 				setIsBotsLoading(true);
 				const response = await axiosInstance.get(
-					`/api/admin/bots?page=${page}&limit=${BOTS_PER_PAGE}`
+					`/api/bots?page=${page}&limit=${BOTS_PER_PAGE}`
 				);
 
 				setBots(response.data.bots);
 				setTotalPages(response.data.totalPages);
 				setIsBotsLoading(false);
 			} catch (error) {
-				setError("Failed to fetch bots");
+				setError("Failed to fetch agents");
 				setIsBotsLoading(false);
 			}
 		})(currentPage);
@@ -70,11 +70,11 @@ const AdminBots = () => {
 		if (!actionBot) return;
 		try {
 			setIsLoading(true);
-			await axiosInstance.delete(`/api/admin/bots/${actionBot._id}`);
+			await axiosInstance.delete(`/api/bots/${actionBot._id}`);
 			setBots((prev) => prev.filter((bot) => bot._id !== actionBot._id));
-			setSuccess("Bot deleted successfully");
+			setSuccess("Agent deleted successfully");
 		} catch (error) {
-			setError("Failed to delete Bot");
+			setError("Failed to delete Agent");
 		} finally {
 			setActionBot(null);
 			setActionType(null);
@@ -113,8 +113,8 @@ const AdminBots = () => {
 
 		const dialogConfig = {
 			delete: {
-				title: "Delete Bot",
-				description: `Are you sure you want to permanently delete the bot: ${actionBot.username}?`,
+				title: "Delete Agent",
+				description: `Are you sure you want to permanently delete the agent: ${actionBot.username}?`,
 				action: handleDelete,
 				variant: "destructive",
 			},
@@ -164,17 +164,17 @@ const AdminBots = () => {
 	};
 
 	return (
-		<DashboardLayout>
+		<AgentBuilderLayout>
 			<div className="bg-blue-950/50 min-h-screen p-4 sm:p-8 text-blue-100">
 				<div className="bg-gray-900/40 rounded-xl shadow-2xl overflow-hidden">
 					{/* Header */}
 					<div className="bg-blue-900/10 px-4 sm:px-6 py-4 flex justify-between items-center border-b border-blue-800">
 						<h1 className="text-xl sm:text-3xl font-bold text-blue-200 flex items-center gap-2 sm:gap-3">
 							<Brain className="w-6 h-6 sm:w-8 sm:h-8" />
-							Bot Management
+							Agent List
 						</h1>
 						<Button
-							onClick={() => navigate("/admin/bot/new")}
+							onClick={() => navigate("/agent/new")}
 							className="
 								bg-blue-700/70 
 								text-green-100 
@@ -187,7 +187,7 @@ const AdminBots = () => {
 							"
 						>
 							<PlusCircle className="w-5 h-5" />
-							Create Bot
+							Build Agent
 						</Button>
 					</div>
 
@@ -196,7 +196,7 @@ const AdminBots = () => {
 						<Table className="w-full">
 							<TableHeader className="bg-blue-700/50 justify-between">
 								<TableRow>
-									<TableHead className="w-[100px]">Bot ID</TableHead>
+									<TableHead className="w-[100px]">Agent ID</TableHead>
 									<TableHead className="text-left">Username</TableHead>
 									<TableHead className="text-left">Role</TableHead>
 									<TableHead className="text-left">Type</TableHead>
@@ -250,7 +250,7 @@ const AdminBots = () => {
 															variant="outline"
 															disabled={isLoading}
 															onClick={() =>
-																navigate(`/admin/bot/${bot._id}`)
+																navigate(`/agent/${bot._id}`)
 															}
 															size="sm"
 															className="bg-blue-900/30 text-blue-200 hover:text-blue-50 hover:bg-blue-800/50 flex items-center gap-2"
@@ -279,16 +279,15 @@ const AdminBots = () => {
 									</>
 								) : (
 									// No users case
-									Array.from({ length: BOTS_PER_PAGE }).map((_, index) => (
-										<TableRow key={index}>
-											<TableCell
-												colSpan={6}
-												className="text-center text-blue-300"
-											>
-												<Skeleton className="h-12 bg-gray-600/30 w-full" />
-											</TableCell>
-										</TableRow>
-									))
+
+									<TableRow className="hover:bg-transparent">
+										<TableCell
+											colSpan={6}
+											className="text-center text-blue-300 h-[690px]"
+										>
+											<span>No Agent</span>
+										</TableCell>
+									</TableRow>
 								)}
 							</TableBody>
 						</Table>
@@ -322,6 +321,8 @@ const AdminBots = () => {
 											href="#"
 											onClick={(e) => {
 												e.preventDefault();
+
+												if (currentPage === 1) return;
 												setCurrentPage(number);
 											}}
 											className={`
@@ -342,11 +343,15 @@ const AdminBots = () => {
 										href="#"
 										onClick={(e) => {
 											e.preventDefault();
+
+											if (currentPage === totalPages || totalPages === 0)
+												return;
+
 											setCurrentPage(Math.min(totalPages, currentPage + 1));
 										}}
 										className={`
                                             ${
-												currentPage === totalPages
+												currentPage === totalPages || totalPages === 0
 													? "opacity-50 cursor-not-allowed"
 													: "hover:bg-blue-800/50"
 											} 
@@ -362,8 +367,8 @@ const AdminBots = () => {
 				{/* Confirmation Dialog */}
 				{renderConfirmationDialog()}
 			</div>
-		</DashboardLayout>
+		</AgentBuilderLayout>
 	);
 };
 
-export default AdminBots;
+export default AgentList;

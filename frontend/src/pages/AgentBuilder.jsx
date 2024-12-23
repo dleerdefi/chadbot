@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "../lib/axiosInstance";
@@ -24,13 +24,11 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Bot, Upload, RefreshCw } from "lucide-react";
-import DashboardLayout from "../components/DashboardLayout";
 import { useApp } from "@/contexts/AppContext";
-import { useParams, useNavigate } from "react-router-dom";
+import AgentBuilderLayout from "@/components/AgentBuilderLayout";
 
-// Zod validation schema (same as CreateBot)
+// Zod validation schema
 const botSchema = z.object({
 	username: z
 		.string()
@@ -38,20 +36,16 @@ const botSchema = z.object({
 		.refine((value) => !/\s/.test(value), {
 			message: "Username must be a single word without spaces",
 		}),
-	botRole: z.string().min(2, { message: "Bot role is required" }),
-	botType: z.string().min(2, { message: "Bot type is required" }),
-	bio: z.string().min(10, { message: "Bio must be at least 10 characters" }),
-	botPersonality: z.string().min(10, { message: "Bot personality description is required" }),
+	botRole: z.string().min(2, { message: "Agent role is required" }),
+	botType: z.string().min(2, { message: "Agent type is required" }),
+	bio: z.string().min(10, { message: "Agent must be at least 10 characters" }),
+	botPersonality: z.string().min(10, { message: "Agent personality description is required" }),
 });
 
-const UpdateBot = () => {
+const AgentBuilder = () => {
 	const [profileImage, setProfileImage] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isBotLoading, setIsBotLoading] = useState(true);
-	const [botData, setBotData] = useState(null);
 	const { setError, setSuccess } = useApp();
-	const { id } = useParams();
-	const navigate = useNavigate();
 
 	// Initialize form with zod resolver
 	const form = useForm({
@@ -64,41 +58,6 @@ const UpdateBot = () => {
 			botPersonality: "",
 		},
 	});
-
-	// Fetch bot details on component mount
-	useEffect(() => {
-		const fetchBotDetails = async () => {
-			try {
-				setIsBotLoading(true);
-				const response = await axiosInstance.get(`/api/admin/bots/${id}`);
-				const bot = response.data.bot;
-
-				// Set form values
-				form.reset({
-					username: bot.username,
-					botRole: bot.botRole,
-					botType: bot.botType,
-					bio: bot.bio,
-					botPersonality: bot.botPersonality,
-				});
-
-				// Set profile image if exists
-				if (bot.profilePic?.url) {
-					setProfileImage(bot.profilePic.url);
-				}
-
-				setBotData(bot);
-				setIsBotLoading(false);
-			} catch (error) {
-				setError(error.response?.data?.message || "Failed to fetch bot details");
-				navigate("/admin/bots");
-			}
-		};
-
-		if (id) {
-			fetchBotDetails();
-		}
-	}, [id]);
 
 	// Handle image upload
 	const handleImageUpload = (event) => {
@@ -113,93 +72,49 @@ const UpdateBot = () => {
 	};
 
 	// Form submission handler
-	const onSubmit = async (botUpdateData) => {
+	const onSubmit = async (botData) => {
 		setIsLoading(true);
 		try {
 			const formData = new FormData();
-			formData.append("username", botUpdateData.username);
-			formData.append("botRole", botUpdateData.botRole);
-			formData.append("botType", botUpdateData.botType);
-			formData.append("bio", botUpdateData.bio);
-			formData.append("botPersonality", botUpdateData.botPersonality);
+			formData.append("username", botData.username);
+			formData.append("botRole", botData.botRole);
+			formData.append("botType", botData.botType);
+			formData.append("bio", botData.bio);
+			formData.append("botPersonality", botData.botPersonality);
 
-			// Append profile picture if new image is selected
+			// Append profile picture if exists
 			const fileInput = document.getElementById("profile-picture");
 			if (fileInput && fileInput.files[0]) {
 				formData.append("bot", fileInput.files[0]);
 			}
 
-			await axiosInstance.put(`/api/admin/bots/${id}`, formData);
+			await axiosInstance.post("/api/bots/new", formData);
 
-			setSuccess("Bot updated successfully");
+			form.reset();
+			setProfileImage(null);
+			if (fileInput) {
+				fileInput.value = "";
+			}
+			setSuccess("Agent created successfully");
 		} catch (error) {
 			if (error.response?.data?.message) {
 				setError(error.response.data.message);
 			} else {
-				setError(error.message || "Error Updating Bot");
+				setError(error.message || "Error Creating Bot");
 			}
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
-	if (isBotLoading) {
-		return (
-			<DashboardLayout>
-				<div className="bg-blue-950/50 mx-auto px-4 py-8 min-h-screen flex justify-center items-center">
-					<div className="max-w-3xl w-full bg-gray-900/40 border border-blue-800/30 rounded-xl shadow-2xl p-6">
-						{/* Header */}
-						<div className="flex items-center border-b border-blue-800 pb-4 mb-6">
-							<Skeleton className="w-10 h-10 mr-4 bg-blue-800/50" />
-							<Skeleton className="h-8 w-64 bg-blue-800/50" />
-						</div>
-
-						{/* Content */}
-						<div className="space-y-6">
-							{/* Profile Section */}
-							<div className="flex space-x-6">
-								<div className="flex flex-col items-center">
-									<Skeleton className="w-24 h-24 rounded-full mb-4 bg-blue-800/50" />
-									<Skeleton className="h-8 w-32 bg-blue-800/50" />
-								</div>
-
-								<div className="flex-grow space-y-4">
-									<div>
-										<Skeleton className="h-6 w-24 mb-2 bg-blue-800/50" />
-										<Skeleton className="h-10 w-full bg-blue-800/50" />
-									</div>
-									<div>
-										<Skeleton className="h-6 w-24 mb-2 bg-blue-800/50" />
-										<Skeleton className="h-10 w-full bg-blue-800/50" />
-									</div>
-								</div>
-							</div>
-
-							{/* Form Fields */}
-							{[1, 2, 3, 4].map((field) => (
-								<div key={field} className="space-y-2">
-									<Skeleton className="h-6 w-32 bg-blue-800/50" />
-									<Skeleton className="h-20 w-full bg-blue-800/50" />
-								</div>
-							))}
-
-							{/* Submit Button */}
-							<Skeleton className="h-12 w-full bg-blue-800/50" />
-						</div>
-					</div>
-				</div>
-			</DashboardLayout>
-		);
-	}
-
 	return (
-		<DashboardLayout>
+		<AgentBuilderLayout>
 			<div className="bg-blue-950/50 mx-auto px-4 py-8 min-h-screen flex justify-center items-center ">
 				<Card className="max-w-3xl w-full mx-auto bg-gray-900/40 border-blue-800/30 shadow-2xl">
 					<CardHeader className="border-b border-blue-800">
 						<CardTitle className="flex items-center gap-2 text-blue-100">
 							<Bot className="w-6 h-6 text-blue-300" />
-							Update Bot: {botData.username}
+							Build New Agent
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="bg-gray-900/40 py-6">
@@ -211,7 +126,7 @@ const UpdateBot = () => {
 										<Avatar className="w-24 h-24 mb-4 ring-2 ring-blue-500/50">
 											<AvatarImage
 												src={profileImage || "/default-bot-avatar.png"}
-												alt="Bot Profile"
+												alt="Agent Profile"
 												className="object-cover"
 											/>
 											<AvatarFallback className="bg-blue-950/90">
@@ -234,7 +149,7 @@ const UpdateBot = () => {
 												document.getElementById("profile-picture").click()
 											}
 										>
-											<Upload className="mr-2 h-4 w-4" /> Update Picture
+											<Upload className="mr-2 h-4 w-4" /> Upload Picture
 										</Button>
 									</div>
 
@@ -250,7 +165,7 @@ const UpdateBot = () => {
 													</FormLabel>
 													<FormControl>
 														<Input
-															placeholder="Enter bot username"
+															placeholder="Enter agent username"
 															className="bg-blue-950/90 border-blue-800 text-blue-100 
 															focus:ring-blue-500/50  focus:border-blue-500 
 															!placeholder-gray-300/70"
@@ -267,7 +182,7 @@ const UpdateBot = () => {
 											render={({ field }) => (
 												<FormItem>
 													<FormLabel className="text-blue-100">
-														Bot Type
+														Agent Type
 													</FormLabel>
 													<Select
 														onValueChange={field.onChange}
@@ -280,7 +195,7 @@ const UpdateBot = () => {
 																focus:ring-blue-500/50  
 																focus:border-blue-500"
 															>
-																<SelectValue placeholder="Select bot type" />
+																<SelectValue placeholder="Select agent type" />
 															</SelectTrigger>
 														</FormControl>
 														<SelectContent className="bg-blue-950 border-blue-800">
@@ -324,11 +239,11 @@ const UpdateBot = () => {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-blue-100">
-												Bot Role
+												Agent Role
 											</FormLabel>
 											<FormControl>
 												<Input
-													placeholder="Define bot's primary role"
+													placeholder="Define agent's primary role"
 													className="bg-blue-950/90 border-blue-800 
 													text-blue-100 
 													focus:ring-blue-500/50  
@@ -338,7 +253,7 @@ const UpdateBot = () => {
 												/>
 											</FormControl>
 											<FormDescription className="text-blue-300">
-												Describe the main purpose or function of your bot
+												Describe the main purpose or function of your agent
 											</FormDescription>
 											<FormMessage className="text-red-400" />
 										</FormItem>
@@ -354,7 +269,7 @@ const UpdateBot = () => {
 											<FormLabel className="text-blue-100">Bio</FormLabel>
 											<FormControl>
 												<Textarea
-													placeholder="Write a brief description about the bot"
+													placeholder="Write a brief description about the agent"
 													className="resize-none bg-blue-950/90 
 													border-blue-800 
 													text-blue-100 
@@ -366,7 +281,7 @@ const UpdateBot = () => {
 											</FormControl>
 											<FormDescription className="text-blue-300">
 												A short description that helps users understand your
-												bot
+												agent
 											</FormDescription>
 											<FormMessage className="text-red-400" />
 										</FormItem>
@@ -380,12 +295,12 @@ const UpdateBot = () => {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-blue-100">
-												Bot Personality
+												Agent Personality
 											</FormLabel>
 											<FormControl>
 												<Textarea
-													placeholder="Describe the bot's personality traits"
-													className="resize-none h-32 bg-blue-950/90 
+													placeholder="Describe the agent's personality traits"
+													className="resize-none h-24 bg-blue-950/90 
 													border-blue-800 
 													text-blue-100 
 													focus:ring-blue-500/50  
@@ -415,10 +330,10 @@ const UpdateBot = () => {
 									{isLoading ? (
 										<>
 											<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-											Updating Bot...
+											Building Agent...
 										</>
 									) : (
-										"Update Bot"
+										"Build Agent"
 									)}
 								</Button>
 							</form>
@@ -426,8 +341,8 @@ const UpdateBot = () => {
 					</CardContent>
 				</Card>
 			</div>
-		</DashboardLayout>
+		</AgentBuilderLayout>
 	);
 };
 
-export default UpdateBot;
+export default AgentBuilder;

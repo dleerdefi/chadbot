@@ -30,9 +30,12 @@ import { useApp } from "@/contexts/AppContext";
 
 // Zod validation schema
 const botSchema = z.object({
-	username: z.string().min(2, { message: "Username must be at least 2 characters" }).refine(value => !/\s/.test(value), {
-		message: "Username must be a single word without spaces"
-	}),
+	username: z
+		.string()
+		.min(2, { message: "Username must be at least 2 characters" })
+		.refine((value) => !/\s/.test(value), {
+			message: "Username must be a single word without spaces",
+		}),
 	botRole: z.string().min(2, { message: "Bot role is required" }),
 	botType: z.string().min(2, { message: "Bot type is required" }),
 	bio: z.string().min(10, { message: "Bio must be at least 10 characters" }),
@@ -84,8 +87,7 @@ const CreateBot = () => {
 			if (fileInput && fileInput.files[0]) {
 				formData.append("bot", fileInput.files[0]);
 			}
-
-			await axiosInstance.post("/api/bots/new", formData);
+			await axiosInstance.post("/api/admin/bots/new", formData);
 
 			form.reset();
 			setProfileImage(null);
