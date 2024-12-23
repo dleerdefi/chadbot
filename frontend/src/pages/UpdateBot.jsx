@@ -70,7 +70,7 @@ const UpdateBot = () => {
 		const fetchBotDetails = async () => {
 			try {
 				setIsBotLoading(true);
-				const response = await axiosInstance.get(`/api/bots/${id}`);
+				const response = await axiosInstance.get(`/api/admin/bots/${id}`);
 				const bot = response.data.bot;
 
 				// Set form values
@@ -129,7 +129,7 @@ const UpdateBot = () => {
 				formData.append("bot", fileInput.files[0]);
 			}
 
-			await axiosInstance.put(`/api/bots/${id}`, formData);
+			await axiosInstance.put(`/api/admin/bots/${id}`, formData);
 
 			setSuccess("Bot updated successfully");
 		} catch (error) {

@@ -52,7 +52,7 @@ const AdminBots = () => {
 			try {
 				setIsBotsLoading(true);
 				const response = await axiosInstance.get(
-					`/api/bots/admin?page=${page}&limit=${BOTS_PER_PAGE}`
+					`/api/admin/bots?page=${page}&limit=${BOTS_PER_PAGE}`
 				);
 
 				setBots(response.data.bots);
@@ -70,7 +70,7 @@ const AdminBots = () => {
 		if (!actionBot) return;
 		try {
 			setIsLoading(true);
-			await axiosInstance.delete(`/api/bots/${actionBot._id}`);
+			await axiosInstance.delete(`/api/admin/bots/${actionBot._id}`);
 			setBots((prev) => prev.filter((bot) => bot._id !== actionBot._id));
 			setSuccess("Bot deleted successfully");
 		} catch (error) {
